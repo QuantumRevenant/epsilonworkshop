@@ -1,0 +1,14 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.epsilonworkshop.model;
+
+/**
+ *
+ * @author sebap
+ */
+public enum WorkOrderChangeType {
+    STATUS_CHANGE,
+    MECHANIC_REASSIGNMENT
+}
