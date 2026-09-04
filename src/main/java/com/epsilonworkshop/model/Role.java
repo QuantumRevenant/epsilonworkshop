@@ -8,6 +8,7 @@ package com.epsilonworkshop.model;
  *
  * @author sebap
  */
-public class Role {
-    
+public enum Role {
+    ADMIN,
+    MECHANIC
 }
