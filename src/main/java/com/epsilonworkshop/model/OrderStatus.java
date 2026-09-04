@@ -8,6 +8,9 @@ package com.epsilonworkshop.model;
  *
  * @author sebap
  */
-public class OrderStatus {
-    
+public enum OrderStatus {
+    PENDING,
+    IN_PROGRESS,
+    FINISHED,
+    CANCELED
 }
