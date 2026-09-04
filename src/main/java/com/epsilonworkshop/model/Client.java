@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
  * @author sebap
  */
 public class Client {
+    
     private Long id;
     private String document;
     private String name;
@@ -117,6 +118,5 @@ public class Client {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
-    
+        
 }
