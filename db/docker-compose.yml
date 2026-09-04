@@ -1,17 +1,17 @@
+name: epsilonworkshop
 services:
-  postgres:
+  db:
     image: postgres:16
-    container_name: taller_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: taller_automotriz
-      POSTGRES_USER: taller_user
-      POSTGRES_PASSWORD: taller_pass
+      POSTGRES_DB: epsilonworkshop
+      POSTGRES_USER: epsilonworkshop_user
+      POSTGRES_PASSWORD: epsilonworkshop_pass
     ports:
       - "5432:5432"
     volumes:
-      - taller_pgdata:/var/lib/postgresql/data
+      - epsilonworkshop_pgdata:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
 
 volumes:
-  taller_pgdata:
+  epsilonworkshop_pgdata:
