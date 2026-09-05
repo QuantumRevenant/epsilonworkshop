@@ -19,10 +19,11 @@ CREATE TABLE "clients"(
     "document_type" VARCHAR(10) NOT NULL,
     "document" VARCHAR(255) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
-    "paternal_surname" VARCHAR(255) NOT NULL,
+    "paternal_surname" VARCHAR(255) NULL,
     "maternal_surname" VARCHAR(255) NULL,
     "phone" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NULL,
+    "notes" TEXT NULL,
     "active" BOOLEAN NOT NULL DEFAULT TRUE,
     "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
