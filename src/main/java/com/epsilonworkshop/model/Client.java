@@ -20,6 +20,7 @@ public class Client {
     private String maternalSurname;
     private String phone;
     private String email;
+    private String notes;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -104,6 +105,14 @@ public class Client {
         this.email = email;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
     public Boolean getActive() {
         return active;
     }
@@ -127,5 +136,5 @@ public class Client {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-     
+
 }
