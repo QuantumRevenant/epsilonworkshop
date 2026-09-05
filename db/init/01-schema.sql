@@ -16,6 +16,7 @@ ALTER TABLE "users" ADD CONSTRAINT "users_username_unique" UNIQUE("username");
 
 CREATE TABLE "clients"(
     "id" bigserial NOT NULL,
+    "document_type" VARCHAR(10) NOT NULL,
     "document" VARCHAR(255) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "paternal_surname" VARCHAR(255) NOT NULL,
@@ -27,7 +28,7 @@ CREATE TABLE "clients"(
     "updated_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE "clients" ADD PRIMARY KEY("id");
-ALTER TABLE "clients" ADD CONSTRAINT "clients_document_unique" UNIQUE("document");
+ALTER TABLE "clients" ADD CONSTRAINT "clients_document_unique" UNIQUE("document_type", "document");
 
 CREATE TABLE "vehicles"(
     "id" bigserial NOT NULL,

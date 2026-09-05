@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class Client {
     
     private Long id;
+    private DocumentType documentType;
     private String document;
     private String name;
     private String paternalSurname;
@@ -45,6 +46,14 @@ public class Client {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public DocumentType getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(DocumentType documentType) {
+        this.documentType = documentType;
     }
 
     public String getDocument() {
@@ -118,5 +127,5 @@ public class Client {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-        
+     
 }
