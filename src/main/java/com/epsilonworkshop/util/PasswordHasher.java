@@ -4,10 +4,22 @@
  */
 package com.epsilonworkshop.util;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 /**
  *
  * @author sebap
  */
 public class PasswordHasher {
+
+    private PasswordHasher() {
+    }
     
+    public static String hash(String password){
+        return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+    
+    public static boolean verify(String password, String hash){
+        return BCrypt.checkpw(password, hash);
+    }
 }
