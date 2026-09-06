@@ -28,19 +28,21 @@ public class Client {
     public Client() {
     }
 
-    public Client(Long id, String document, String name, String paternalSurname, String maternalSurname, String phone, String email, Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Client(Long id, DocumentType documentType, String document, String name, String paternalSurname, String maternalSurname, String phone, String email, String notes, Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.documentType = documentType;
         this.document = document;
         this.name = name;
         this.paternalSurname = paternalSurname;
         this.maternalSurname = maternalSurname;
         this.phone = phone;
         this.email = email;
+        this.notes = notes;
         this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
-
+    
     public Long getId() {
         return id;
     }
