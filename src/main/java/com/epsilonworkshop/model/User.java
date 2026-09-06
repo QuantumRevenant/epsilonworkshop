@@ -19,13 +19,14 @@ public class User {
     private String name;
     private String paternalSurname;
     private String maternalSurname;
+    private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public User() {
     }
 
-    public User(Long id, String username, String passwordHash, Role role, String name, String paternalSurname, String maternalSurname, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(Long id, String username, String passwordHash, Role role, String name, String paternalSurname, String maternalSurname, Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -33,6 +34,7 @@ public class User {
         this.name = name;
         this.paternalSurname = paternalSurname;
         this.maternalSurname = maternalSurname;
+        this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -93,6 +95,14 @@ public class User {
         this.maternalSurname = maternalSurname;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -108,5 +118,6 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-        
+
+            
 }
