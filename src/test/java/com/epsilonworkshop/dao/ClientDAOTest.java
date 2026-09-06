@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ClientDAOTest {
 
-    private Connection conn;
+    private Connection connection;
     private ClientDAO clientDAO;
 
     private String generateTestDocument() {
@@ -35,18 +35,18 @@ public class ClientDAOTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        conn = DBConnection.getConnection();
-        conn.setAutoCommit(false);
+        connection = DBConnection.getConnection();
+        connection.setAutoCommit(false);
 
-        clientDAO = new ClientDAO(conn);
+        clientDAO = new ClientDAO(connection);
     }
 
     @AfterEach
     void tearDown() throws Exception {
         try {
-            conn.rollback();
+            connection.rollback();
         } finally {
-            conn.close();
+            connection.close();
         }
     }
 
@@ -90,6 +90,7 @@ public class ClientDAOTest {
 
         assertTrue(result.isPresent());
         assertEquals(created.getId(), result.get().getId());
+        assertEquals(created.getDocument(), result.get().getDocument());
     }
 
     @Test
