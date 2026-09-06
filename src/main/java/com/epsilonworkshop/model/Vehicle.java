@@ -18,6 +18,7 @@ public class Vehicle {
     private String brand;
     private String model;
     private Integer year;
+    private String notes;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -25,13 +26,14 @@ public class Vehicle {
     public Vehicle() {
     }
 
-    public Vehicle(Long id, Long clientId, String plate, String brand, String model, Integer year, Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Vehicle(Long id, Long clientId, String plate, String brand, String model, Integer year, String notes, Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.clientId = clientId;
         this.plate = plate;
         this.brand = brand;
         this.model = model;
         this.year = year;
+        this.notes = notes;
         this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -85,6 +87,14 @@ public class Vehicle {
         this.year = year;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
     public Boolean getActive() {
         return active;
     }
@@ -109,5 +119,5 @@ public class Vehicle {
         this.updatedAt = updatedAt;
     }
 
-        
+    
 }
