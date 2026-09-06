@@ -23,8 +23,37 @@ import java.util.Optional;
  */
 public class ClientDAO {
 
-    private static final String INSERT_SQL
-            = """
+    private final Connection connection;
+
+    public ClientDAO() {
+        this.connection = null;
+    }
+
+    public ClientDAO(Connection connection) {
+        if (connection == null) {
+            throw new IllegalArgumentException("Connection cannot be null");
+        }
+
+        this.connection = connection;
+    }
+
+    private Connection getConnection() throws SQLException {
+        return connection != null
+                ? connection
+                : DBConnection.getConnection();
+    }
+
+    private boolean hasExternalConnection() {
+        return connection != null;
+    }
+
+    private void closeConnection(Connection conn) throws SQLException {
+        if (!hasExternalConnection()) {
+            conn.close();
+        }
+    }
+
+    private static final String INSERT_SQL = """
             INSERT INTO clients (
                 document_type,
                 document,
@@ -36,7 +65,7 @@ public class ClientDAO {
                 notes
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            RETURNING *            
+            RETURNING *
             """;
 
     private static final String FIND_BY_ID_SQL = """
@@ -53,11 +82,11 @@ public class ClientDAO {
             """;
 
     private static final String FIND_BY_DOCUMENT_SQL = """
-        SELECT *
-        FROM clients
-        WHERE document_type = ?
-          AND document = ?
-        """;
+            SELECT *
+            FROM clients
+            WHERE document_type = ?
+              AND document = ?
+            """;
 
     private static final String UPDATE_SQL = """
             UPDATE clients
@@ -83,8 +112,9 @@ public class ClientDAO {
 
     public Client create(Client client) throws SQLException {
 
-        try (Connection connection = DBConnection.getConnection(); 
-                PreparedStatement statement = connection.prepareStatement(INSERT_SQL)) {
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(INSERT_SQL)) {
 
             statement.setString(1, client.getDocumentType().name());
             statement.setString(2, client.getDocument());
@@ -100,14 +130,19 @@ public class ClientDAO {
                     return mapResultSet(resultSet);
                 }
             }
+
+        } finally {
+            closeConnection(conn);
         }
+
         throw new SQLException("Could not create client");
     }
 
     public Optional<Client> findById(Long id) throws SQLException {
 
-        try (Connection connection = DBConnection.getConnection(); 
-                PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(FIND_BY_ID_SQL)) {
 
             statement.setLong(1, id);
 
@@ -116,6 +151,9 @@ public class ClientDAO {
                     return Optional.of(mapResultSet(resultSet));
                 }
             }
+
+        } finally {
+            closeConnection(conn);
         }
 
         return Optional.empty();
@@ -123,14 +161,18 @@ public class ClientDAO {
 
     public List<Client> findAll() throws SQLException {
 
+        Connection conn = getConnection();
         List<Client> clients = new ArrayList<>();
 
-        try (Connection connection = DBConnection.getConnection(); 
-                PreparedStatement statement = connection.prepareStatement(FIND_ALL_SQL); ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = conn.prepareStatement(FIND_ALL_SQL);
+             ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 clients.add(mapResultSet(resultSet));
             }
+
+        } finally {
+            closeConnection(conn);
         }
 
         return clients;
@@ -141,9 +183,9 @@ public class ClientDAO {
             String document
     ) throws SQLException {
 
-        try (Connection connection = DBConnection.getConnection(); 
-                PreparedStatement statement
-                = connection.prepareStatement(FIND_BY_DOCUMENT_SQL)) {
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(FIND_BY_DOCUMENT_SQL)) {
 
             statement.setString(1, documentType.name());
             statement.setString(2, document);
@@ -153,6 +195,9 @@ public class ClientDAO {
                     return Optional.of(mapResultSet(resultSet));
                 }
             }
+
+        } finally {
+            closeConnection(conn);
         }
 
         return Optional.empty();
@@ -160,8 +205,9 @@ public class ClientDAO {
 
     public Client update(Client client) throws SQLException {
 
-        try (Connection connection = DBConnection.getConnection(); 
-                PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(UPDATE_SQL)) {
 
             statement.setString(1, client.getDocumentType().name());
             statement.setString(2, client.getDocument());
@@ -178,6 +224,9 @@ public class ClientDAO {
                     return mapResultSet(resultSet);
                 }
             }
+
+        } finally {
+            closeConnection(conn);
         }
 
         throw new SQLException("Could not update client");
@@ -185,8 +234,9 @@ public class ClientDAO {
 
     public void softDelete(Long id) throws SQLException {
 
-        try (Connection connection = DBConnection.getConnection(); 
-                PreparedStatement statement = connection.prepareStatement(SOFT_DELETE_SQL)) {
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(SOFT_DELETE_SQL)) {
 
             statement.setLong(1, id);
 
@@ -195,20 +245,32 @@ public class ClientDAO {
             if (rowsAffected == 0) {
                 throw new SQLException("Client not found: " + id);
             }
+
+        } finally {
+            closeConnection(conn);
         }
     }
 
     private Client mapResultSet(ResultSet resultSet) throws SQLException {
+
         Client client = new Client();
 
         client.setId(resultSet.getLong("id"));
+
         client.setDocumentType(
-                DocumentType.valueOf(resultSet.getString("document_type"))
+                DocumentType.valueOf(
+                        resultSet.getString("document_type")
+                )
         );
+
         client.setDocument(resultSet.getString("document"));
         client.setName(resultSet.getString("name"));
-        client.setPaternalSurname(resultSet.getString("paternal_surname"));
-        client.setMaternalSurname(resultSet.getString("maternal_surname"));
+        client.setPaternalSurname(
+                resultSet.getString("paternal_surname")
+        );
+        client.setMaternalSurname(
+                resultSet.getString("maternal_surname")
+        );
         client.setPhone(resultSet.getString("phone"));
         client.setEmail(resultSet.getString("email"));
         client.setNotes(resultSet.getString("notes"));
