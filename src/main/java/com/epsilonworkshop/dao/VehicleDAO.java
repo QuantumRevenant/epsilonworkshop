@@ -4,7 +4,6 @@
  */
 package com.epsilonworkshop.dao;
 
-import com.epsilonworkshop.config.DBConnection;
 import com.epsilonworkshop.model.Vehicle;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,36 +18,14 @@ import java.util.Optional;
  *
  * @author sebap
  */
-public class VehicleDAO {
-
-    private final Connection connection;
+public class VehicleDAO extends BaseDAO{
 
     public VehicleDAO() {
-        this.connection = null;
+        super();
     }
 
     public VehicleDAO(Connection connection) {
-        if (connection == null) {
-            throw new IllegalArgumentException("Connection cannot be null");
-        }
-
-        this.connection = connection;
-    }
-
-    private Connection getConnection() throws SQLException {
-        return connection != null
-                ? connection
-                : DBConnection.getConnection();
-    }
-
-    private boolean hasExternalConnection() {
-        return connection != null;
-    }
-
-    private void closeConnection(Connection conn) throws SQLException {
-        if (!hasExternalConnection()) {
-            conn.close();
-        }
+        super(connection);
     }
 
     private static final String INSERT_SQL = """

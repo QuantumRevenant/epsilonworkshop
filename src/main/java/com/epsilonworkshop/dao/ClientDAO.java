@@ -4,7 +4,6 @@
  */
 package com.epsilonworkshop.dao;
 
-import com.epsilonworkshop.config.DBConnection;
 import com.epsilonworkshop.model.Client;
 import com.epsilonworkshop.model.DocumentType;
 
@@ -21,36 +20,14 @@ import java.util.Optional;
  *
  * @author sebap
  */
-public class ClientDAO {
-
-    private final Connection connection;
+public class ClientDAO extends BaseDAO{
 
     public ClientDAO() {
-        this.connection = null;
+        super();
     }
 
     public ClientDAO(Connection connection) {
-        if (connection == null) {
-            throw new IllegalArgumentException("Connection cannot be null");
-        }
-
-        this.connection = connection;
-    }
-
-    private Connection getConnection() throws SQLException {
-        return connection != null
-                ? connection
-                : DBConnection.getConnection();
-    }
-
-    private boolean hasExternalConnection() {
-        return connection != null;
-    }
-
-    private void closeConnection(Connection conn) throws SQLException {
-        if (!hasExternalConnection()) {
-            conn.close();
-        }
+        super(connection);
     }
 
     private static final String INSERT_SQL = """
