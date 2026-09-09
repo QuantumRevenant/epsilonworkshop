@@ -4,13 +4,18 @@
 
 package com.epsilonworkshop;
 
+import com.epsilonworkshop.view.MainFrame;
+
+import javax.swing.*;
+
 /**
  *
  * @author sebap
  */
 public class App {
-
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        SwingUtilities.invokeLater(() -> {
+            new MainFrame().setVisible(true);
+        });
     }
 }
