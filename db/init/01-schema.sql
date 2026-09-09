@@ -17,7 +17,7 @@ ALTER TABLE "users" ADD CONSTRAINT "users_username_unique" UNIQUE("username");
 
 CREATE TABLE "clients"(
     "id" bigserial NOT NULL,
-    "document_type" VARCHAR(10) NOT NULL,
+    "document_type" VARCHAR(10) CHECK ("document_type" IN ('DNI', 'CE', 'RUC')) NOT NULL,
     "document" VARCHAR(255) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "paternal_surname" VARCHAR(255) NULL,
