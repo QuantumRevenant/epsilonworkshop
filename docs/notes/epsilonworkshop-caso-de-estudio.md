@@ -1,4 +1,4 @@
-# Épsilon Workshop — Caso de Estudio y Especificación de Requisitos (v2)
+# Épsilon Workshop — Caso de Estudio y Especificación de Requisitos (v3)
 
 **Curso:** 2026-II
 **Nomenclatura interna:** Épsilon
@@ -76,7 +76,7 @@ Dado que Backend y Frontend se desarrollan en paralelo (semanas 6-10 y 8-13 resp
 | **Cliente** | No es usuario del sistema; es una entidad de datos gestionada por el Administrador. | No aplica |
 
 **Diseño de tablas de usuario (confirmado):** patrón de tabla de extensión por rol.
-- `users`: id, username, password_hash, role, full_name.
+- `users`: id, username, password_hash, role, name, paternal_surname, maternal_surname, **active**, created_at, updated_at.
 - `mechanics`: id, user_id (FK → users, único), specialty, active — solo existe una fila por usuario con role = mechanic.
 
 ---
@@ -125,18 +125,25 @@ Un vehículo puede transferirse a otro cliente (`vehicles.client_id` es editable
 Un mecánico marcado como `active = false` no puede ser asignado a **nuevas** órdenes ni reasignado a órdenes existentes, pero permanece visible en el historial de órdenes que ya tenía asignadas.
 
 **RN-12 — Unicidad de datos reales.**
-La placa del vehículo y el documento de identidad del cliente son únicos (`UNIQUE`) en la base de datos: no puede haber dos vehículos con la misma placa ni dos clientes con el mismo documento.
+La placa del vehículo es única (`UNIQUE`). El documento de identidad del cliente es único **por tipo de documento**: la restricción es `UNIQUE(document_type, document)`. Esto evita que dos clientes compartan el mismo número bajo el mismo tipo de documento (ej. dos DNI "12345678"), pero permite que el mismo número coexista bajo tipos distintos sin conflicto (ej. un DNI "12345678" y un RUC "12345678" no colisionan). `document_type` está restringido a los valores `DNI`, `CE`, `RUC` (`CHECK` en base de datos, enum `DocumentType` en Java).
 
 **RN-13 — Trazabilidad temporal general.**
 Todas las tablas principales (`clients`, `vehicles`, `mechanics`, `work_orders`) registran `created_at` y `updated_at`. Adicionalmente, `work_orders` registra `closed_at` (nullable, se completa automáticamente al pasar a `terminado` o `cancelado`), para poder reportar tanto por fecha de ingreso como por fecha de cierre.
+
+**RN-14 — Bloqueo de cuenta de usuario.**
+`users.active = false` bloquea el inicio de sesión de esa cuenta (Administrador o Mecánico), independientemente del estado de `mechanics.active`. Son dos flags independientes:
+- `users.active` controla el **acceso al sistema** (¿puede loguearse?).
+- `mechanics.active` controla la **elegibilidad para ser asignado a órdenes de trabajo** (RN-11).
+
+Un mecánico puede tener `users.active = true` (puede loguearse) y `mechanics.active = false` (no asignable a nuevas órdenes), o viceversa, según la decisión del Administrador. No hay cascada automática entre ambos campos.
 
 ---
 
 ## 6. Requisitos funcionales (RF)
 
 ### Must have
-- **RF-01:** Inicio de sesión con usuario y contraseña, identificando rol (Administrador / Mecánico).
-- **RF-02:** CRUD de clientes (con baja lógica, RN-01).
+- **RF-01:** Inicio de sesión con usuario y contraseña, identificando rol (Administrador / Mecánico), respetando el bloqueo de cuenta (RN-14).
+- **RF-02:** CRUD de clientes (con baja lógica, RN-01), incluyendo tipo y número de documento (RN-12).
 - **RF-03:** CRUD de vehículos, asociados a un cliente, con soporte para transferencia de dueño (RN-10).
 - **RF-04:** CRUD de mecánicos, con baja lógica (RN-01) y estado activo/inactivo (RN-11).
 - **RF-05:** Registro de orden de trabajo asociada a un vehículo, con mecánico opcional al momento de creación (RN-03).
@@ -145,6 +152,7 @@ Todas las tablas principales (`clients`, `vehicles`, `mechanics`, `work_orders`)
 - **RF-08:** Registro automático en `work_order_history` de cada cambio de estado y reasignación (RN-08).
 - **RF-09:** El Administrador tiene acceso completo a todas las funcionalidades.
 - **RF-10:** El Mecánico solo visualiza y actualiza el estado de las órdenes que tiene asignadas (RN-09).
+- **RF-17:** El Administrador puede activar/desactivar cuentas de usuario (RN-14), independientemente del estado de `mechanics.active`.
 
 ### Should have
 - **RF-11:** Gestión de catálogo de servicios (nombre, descripción, precio referencial).
@@ -162,15 +170,15 @@ Todas las tablas principales (`clients`, `vehicles`, `mechanics`, `work_orders`)
 
 - **RNF-01:** Aplicación de escritorio (Java Swing), monousuario o multiusuario en red local — no diseñada para acceso vía internet.
 - **RNF-02:** Persistencia en PostgreSQL 16, en contenedor Docker para desarrollo y pruebas.
-- **RNF-03:** Arquitectura MVC extendida con capa DAO, separando presentación, lógica de negocio y acceso a datos.
+- **RNF-03:** Arquitectura MVC extendida con capa DAO, separando presentación, lógica de negocio y acceso a datos. La capa DAO comparte una clase base común (`BaseDAO`) para evitar duplicación de lógica de conexión entre DAOs concretos.
 - **RNF-04:** Contraseñas cifradas (hash), nunca en texto plano.
 - **RNF-05:** Validación de toda entrada de usuario en la capa `util/Validations`.
 - **RNF-06:** Nomenclatura de código consistente en inglés, sin mezcla de idiomas.
-- **RNF-07:** Pruebas unitarias mínimas de la capa DAO/lógica de negocio con JUnit 5, incluyendo casos de transición de estado inválida (RN-06/RN-07).
+- **RNF-07:** Pruebas unitarias mínimas de la capa DAO y de la capa Controller (lógica de negocio) con JUnit 5, incluyendo casos de transición de estado inválida (RN-06/RN-07), permisos por rol (RN-09) y bloqueo de mecánico inactivo (RN-11).
 - **RNF-08:** El proyecto debe levantarse en un entorno limpio siguiendo el README (clonar, Docker, Maven), sin configuración manual adicional.
 - **RNF-09:** Identificadores `SERIAL/INTEGER`, no UUID.
+- **RNF-10:** Las reglas de transición de estado (RN-06/RN-07) deben validarse tanto en la capa de negocio (Controller) como reforzarse con un trigger a nivel de base de datos (`02-triggers.sql`), que además completa `closed_at` automáticamente al llegar a un estado final.
 - **RNF-11:** Las tablas principales mantienen `created_at`/`updated_at`; `work_orders` además mantiene `closed_at` (RN-13).
-- **RNF-10:** Las reglas de transición de estado (RN-06/RN-07) deben validarse tanto en la capa de negocio (Controller/Service) como, idealmente, reforzarse con constraints a nivel de base de datos.
 
 ---
 
@@ -178,12 +186,12 @@ Todas las tablas principales (`clients`, `vehicles`, `mechanics`, `work_orders`)
 
 | Entidad | Prioridad | Notas |
 |---|---|---|
-| `users` | Must | Login: username, password_hash, role, full_name, created_at, updated_at |
-| `clients` | Must | + `active` (RN-01), `document` UNIQUE (RN-12), created_at, updated_at |
-| `vehicles` | Must | FK → clients (editable, RN-10), + `active`, `plate` UNIQUE (RN-12), created_at, updated_at |
+| `users` | Must | Login: username, password_hash, role, name, paternal_surname, maternal_surname, `active` (RN-14, bloqueo de login, independiente de `mechanics.active`), created_at, updated_at |
+| `clients` | Must | + `document_type` (enum `DocumentType`: DNI/CE/RUC, con `CHECK` en BD), `document`, `notes` opcional, `active` (RN-01); UNIQUE compuesto `(document_type, document)` (RN-12); `paternal_surname` nullable, `maternal_surname` nullable; created_at, updated_at |
+| `vehicles` | Must | FK → clients (editable, RN-10), + `active`, `plate` UNIQUE (RN-12), `notes` opcional, created_at, updated_at |
 | `mechanics` | Must | FK → users (único), + `active` (RN-11), created_at, updated_at |
-| `work_orders` | Must | FK → vehicles, FK → mechanics (nullable), `status` (4 valores, RN-05/06/07), created_at, updated_at, closed_at nullable (RN-13) |
-| `work_order_history` | Must | FK → work_orders, FK → users (quién hizo el cambio), tipo de cambio, valor anterior/nuevo, timestamp (RN-08) |
+| `work_orders` | Must | FK → vehicles, FK → mechanics (nullable), `status` (enum Postgres `order_status`, 4 valores, RN-05/06/07), created_at, updated_at, closed_at nullable (RN-13) |
+| `work_order_history` | Must | FK → work_orders, FK → users (quién hizo el cambio), `change_type` (`status_change` / `mechanic_reassignment`, enum Java `WorkOrderChangeType`), valor anterior/nuevo, timestamp (RN-08) |
 | `services` | Should | Catálogo |
 | `work_order_services` | Should | Tabla de detalle (work_order ↔ service) |
 | `parts` | Could | Catálogo + stock |
@@ -193,7 +201,7 @@ Todas las tablas principales (`clients`, `vehicles`, `mechanics`, `work_orders`)
 
 ## 9. Próximos pasos
 
-1. Diseño detallado del schema SQL (`01-schema.sql`) para las entidades Must have, incluyendo el `CHECK` constraint o trigger para las transiciones válidas de estado (RN-06/RN-07).
-2. Definir el enum/tipo de dato para `status` y `role` (¿`VARCHAR` con `CHECK`, o tipo `ENUM` de Postgres?).
+1. Completar la lógica de negocio en la capa Controller (RN-01 a RN-14), actualmente cascarones sin validación.
+2. Escribir tests JUnit de Controller para los casos críticos: transiciones de estado inválidas, permisos por rol, mecánico/usuario inactivo.
 3. Confirmar decisión de GUI: Swing vs JavaFX.
-4. Avanzar a `DBConnection.java` → DAOs → Controllers → Views.
+4. Avanzar a la capa View: `LoginFrame` como punto de entrada real, luego `MainFrame` con menú condicionado por rol, luego los paneles restantes.
