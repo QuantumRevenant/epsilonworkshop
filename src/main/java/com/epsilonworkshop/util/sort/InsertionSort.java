@@ -8,12 +8,10 @@ package com.epsilonworkshop.util.sort;
  *
  * @author sebap
  */
-public final class InsertionSort {
+public final class InsertionSort<T extends Comparable<? super T>> implements SortAlgorithm<T> {
 
-    private InsertionSort() {
-    }
-
-    public static <T extends Comparable<? super T>> void sort(T[] array) {
+    @Override
+    public void sort(T[] array) {
 
         for (int i = 1; i < array.length; i++) {
 

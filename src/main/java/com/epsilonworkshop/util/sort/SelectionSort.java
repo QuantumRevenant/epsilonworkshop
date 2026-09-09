@@ -8,12 +8,10 @@ package com.epsilonworkshop.util.sort;
  *
  * @author sebap
  */
-public final class SelectionSort {
+public final class SelectionSort <T extends Comparable<? super T>> implements SortAlgorithm<T> {
 
-    private SelectionSort() {
-    }
-
-    public static <T extends Comparable<? super T>> void sort(T[] array) {
+    @Override
+    public void sort(T[] array) {
 
         for (int i = 0; i < array.length - 1; i++) {
 

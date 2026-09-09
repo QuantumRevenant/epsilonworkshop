@@ -13,29 +13,25 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
  * @author sebap
  */
 public class SortTest {
-    @FunctionalInterface
-    private interface SortAlgorithm<T extends Comparable<? super T>> {
-        void sort(T[] array);
-    }
 
     private final SortAlgorithm<Integer>[] integerSorts = new SortAlgorithm[]{
-            BubbleSort::sort,
-            InsertionSort::sort,
-            SelectionSort::sort,
-            MergeSort::sort,
-            ShellSort::sort,
-            QuickSort::sort
+        new BubbleSort<>(),
+        new InsertionSort<>(),
+        new SelectionSort<>(),
+        new MergeSort<>(),
+        new ShellSort<>(),
+        new QuickSort<>()
     };
 
     @Test
     void shouldSortUnorderedArray() {
         Integer[] expected = {
-                1, 2, 3, 4, 5, 6, 7, 8, 9
+            1, 2, 3, 4, 5, 6, 7, 8, 9
         };
 
         for (SortAlgorithm<Integer> sort : integerSorts) {
             Integer[] array = {
-                    5, 2, 9, 1, 7, 3, 8, 6, 4
+                5, 2, 9, 1, 7, 3, 8, 6, 4
             };
 
             sort.sort(array);
@@ -47,12 +43,12 @@ public class SortTest {
     @Test
     void shouldSortArrayWithDuplicates() {
         Integer[] expected = {
-                1, 2, 2, 3, 3, 4, 5, 5
+            1, 2, 2, 3, 3, 4, 5, 5
         };
 
         for (SortAlgorithm<Integer> sort : integerSorts) {
             Integer[] array = {
-                    3, 5, 2, 5, 1, 4, 3, 2
+                3, 5, 2, 5, 1, 4, 3, 2
             };
 
             sort.sort(array);
@@ -64,12 +60,12 @@ public class SortTest {
     @Test
     void shouldKeepSortedArray() {
         Integer[] expected = {
-                1, 2, 3, 4, 5
+            1, 2, 3, 4, 5
         };
 
         for (SortAlgorithm<Integer> sort : integerSorts) {
             Integer[] array = {
-                    1, 2, 3, 4, 5
+                1, 2, 3, 4, 5
             };
 
             sort.sort(array);
@@ -81,12 +77,12 @@ public class SortTest {
     @Test
     void shouldSortReverseOrderedArray() {
         Integer[] expected = {
-                1, 2, 3, 4, 5
+            1, 2, 3, 4, 5
         };
 
         for (SortAlgorithm<Integer> sort : integerSorts) {
             Integer[] array = {
-                    5, 4, 3, 2, 1
+                5, 4, 3, 2, 1
             };
 
             sort.sort(array);
@@ -125,27 +121,27 @@ public class SortTest {
     void shouldSortStrings() {
 
         SortAlgorithm<String>[] stringSorts = new SortAlgorithm[]{
-                BubbleSort::sort,
-                InsertionSort::sort,
-                SelectionSort::sort,
-                MergeSort::sort,
-                ShellSort::sort,
-                QuickSort::sort
+            new BubbleSort<>(),
+            new InsertionSort<>(),
+            new SelectionSort<>(),
+            new MergeSort<>(),
+            new ShellSort<>(),
+            new QuickSort<>()
         };
 
         String[] expected = {
-                "Ana",
-                "Carlos",
-                "Ernesto",
-                "Luis"
+            "Ana",
+            "Carlos",
+            "Ernesto",
+            "Luis"
         };
 
         for (SortAlgorithm<String> sort : stringSorts) {
             String[] array = {
-                    "Luis",
-                    "Ernesto",
-                    "Ana",
-                    "Carlos"
+                "Luis",
+                "Ernesto",
+                "Ana",
+                "Carlos"
             };
 
             sort.sort(array);

@@ -8,12 +8,10 @@ package com.epsilonworkshop.util.sort;
  *
  * @author sebap
  */
-public final class MergeSort {
+public final class MergeSort<T extends Comparable<? super T>> implements SortAlgorithm<T> {
 
-    private MergeSort() {
-    }
-
-    public static <T extends Comparable<? super T>> void sort(T[] array) {
+    @Override
+    public void sort(T[] array) {
         if (array.length < 2) {
             return;
         }

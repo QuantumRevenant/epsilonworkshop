@@ -8,12 +8,10 @@ package com.epsilonworkshop.util.sort;
  *
  * @author sebap
  */
-public final class QuickSort {
+public final class QuickSort<T extends Comparable<? super T>> implements SortAlgorithm<T> {
 
-    private QuickSort() {
-    }
-
-    public static <T extends Comparable<? super T>> void sort(T[] array) {
+    @Override
+    public void sort(T[] array) {
         quickSort(array, 0, array.length - 1);
     }
 
