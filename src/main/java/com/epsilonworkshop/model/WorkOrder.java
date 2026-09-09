@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
  *
  * @author sebap
  */
-public class WorkOrder {
-    
+public class WorkOrder implements Comparable<WorkOrder> {
+
     private Long id;
     private Long vehicleId;
     private Long mechanicId;
@@ -98,6 +98,34 @@ public class WorkOrder {
     public void setClosedAt(LocalDateTime closedAt) {
         this.closedAt = closedAt;
     }
-    
-    
+
+    private static int comparisonCount = 0;
+
+    public static void resetComparisonCount() {
+        comparisonCount = 0;
+    }
+
+    public static int getComparisonCount() {
+        return comparisonCount;
+    }
+
+    @Override
+    public int compareTo(WorkOrder other) {
+        comparisonCount++; // contador para fines de demostración académica
+
+        if (this.createdAt == null && other.createdAt == null) {
+            return 0;
+        }
+        if (this.createdAt == null) {
+            return -1;
+        }
+        if (other.createdAt == null) {
+            return 1;
+        }
+        int cmp = this.createdAt.compareTo(other.createdAt);
+        if (cmp != 0) {
+            return cmp;
+        }
+        return Long.compare(this.id, other.id);
+    }
 }
