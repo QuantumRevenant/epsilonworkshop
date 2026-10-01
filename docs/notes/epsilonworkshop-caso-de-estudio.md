@@ -97,6 +97,9 @@ Una orden de trabajo puede crearse **sin mecánico asignado** (`mechanic_id` nul
 **RN-04 — Reasignación de mecánico.**
 El Administrador puede reasignar el mecánico de una orden **en cualquier momento**, mientras la orden no esté en un estado final (`terminado` o `cancelado`). Cada reasignación se registra en el historial de auditoría (RN-08).
 
+**RN-04b — Autoasignación de mecánico (orden sin asignar).**
+Un Mecánico puede autoasignarse una orden de trabajo **únicamente si esta no tiene mecánico asignado** (`mechanic_id IS NULL`). Una vez que un mecánico se autoasigna una orden, **no puede soltarla ni reasignarla** — a partir de ese momento, solo el Administrador puede modificar la asignación de mecánico de esa orden (RN-04). Un Mecánico no puede autoasignarse una orden que ya tiene otro mecánico asignado, ni reasignar una orden ajena a sí mismo. Esta regla no aplica a órdenes en estado final (`terminado` o `cancelado`), consistente con RN-04. Cada autoasignación se registra en el historial de auditoría igual que cualquier reasignación (RN-08), con `change_type = mechanic_reassignment`.
+
 **RN-05 — Estados de una orden de trabajo.**
 Cuatro estados: `pendiente`, `en_progreso`, `terminado`, `cancelado`.
 
@@ -116,7 +119,7 @@ No están permitidas otras transiciones (ej. no se puede cancelar algo ya `termi
 Toda orden de trabajo mantiene una tabla de historial (`work_order_history`) que registra: quién hizo el cambio (`user_id`), tipo de cambio (`status_change` o `mechanic_reassignment`), valor anterior, valor nuevo, y fecha/hora. Se registra tanto cada cambio de estado como cada reasignación de mecánico.
 
 **RN-09 — Permisos sobre el estado de la orden.**
-El Administrador puede cambiar el estado de **cualquier** orden. El Mecánico solo puede cambiar el estado de las órdenes **que tiene asignadas actualmente**.
+El Administrador puede cambiar el estado de **cualquier** orden. El Mecánico solo puede cambiar el estado de las órdenes **que tiene asignadas actualmente**. Una orden sin mecánico asignado no puede tener su estado modificado por un Mecánico bajo ningún caso — debe primero autoasignársela (RN-04b) o esperar a que el Administrador la asigne (RN-04).
 
 **RN-10 — Transferencia de propiedad de vehículo.**
 Un vehículo puede transferirse a otro cliente (`vehicles.client_id` es editable). El historial de órdenes de trabajo del vehículo permanece intacto y no se reasigna — las órdenes pasadas siguen asociadas al mismo `vehicle_id`, independientemente de quién sea el dueño actual.
@@ -149,6 +152,7 @@ Un mecánico puede tener `users.active = true` (puede loguearse) y `mechanics.ac
 - **RF-05:** Registro de orden de trabajo asociada a un vehículo, con mecánico opcional al momento de creación (RN-03).
 - **RF-06:** Cambio de estado de una orden de trabajo, respetando las transiciones válidas (RN-06) y bloqueo de estados finales (RN-07).
 - **RF-07:** Reasignación de mecánico en órdenes no finalizadas (RN-04), solo por el Administrador.
+- **RF-07b:** Autoasignación de un Mecánico a una orden de trabajo sin mecánico asignado, en órdenes no finalizadas (RN-04b). El Mecánico no puede revertir esta acción; solo el Administrador puede modificar la asignación una vez hecha.
 - **RF-08:** Registro automático en `work_order_history` de cada cambio de estado y reasignación (RN-08).
 - **RF-09:** El Administrador tiene acceso completo a todas las funcionalidades.
 - **RF-10:** El Mecánico solo visualiza y actualiza el estado de las órdenes que tiene asignadas (RN-09).
@@ -190,7 +194,7 @@ Un mecánico puede tener `users.active = true` (puede loguearse) y `mechanics.ac
 | `clients` | Must | + `document_type` (enum `DocumentType`: DNI/CE/RUC, con `CHECK` en BD), `document`, `notes` opcional, `active` (RN-01); UNIQUE compuesto `(document_type, document)` (RN-12); `paternal_surname` nullable, `maternal_surname` nullable; created_at, updated_at |
 | `vehicles` | Must | FK → clients (editable, RN-10), + `active`, `plate` UNIQUE (RN-12), `notes` opcional, created_at, updated_at |
 | `mechanics` | Must | FK → users (único), + `active` (RN-11), created_at, updated_at |
-| `work_orders` | Must | FK → vehicles, FK → mechanics (nullable), `status` (enum Postgres `order_status`, 4 valores, RN-05/06/07), created_at, updated_at, closed_at nullable (RN-13) |
+| `work_orders` | Must | FK → vehicles, FK → mechanics (nullable; se llena por asignación del Administrador o autoasignación del Mecánico si está vacío — RN-04/RN-04b), `status` (enum Postgres `order_status`, 4 valores, RN-05/06/07), created_at, updated_at, closed_at nullable (RN-13) |
 | `work_order_history` | Must | FK → work_orders, FK → users (quién hizo el cambio), `change_type` (`status_change` / `mechanic_reassignment`, enum Java `WorkOrderChangeType`), valor anterior/nuevo, timestamp (RN-08) |
 | `services` | Should | Catálogo |
 | `work_order_services` | Should | Tabla de detalle (work_order ↔ service) |
