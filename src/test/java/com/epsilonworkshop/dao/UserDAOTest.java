@@ -163,6 +163,37 @@ public class UserDAOTest {
         assertFalse(result.get().getActive());
     }
 
+    @Test
+    void shouldReturnTrueWhenUsernameExistsAndIsActive() throws Exception {
+
+        User user = createTestUser();
+
+        boolean exists = userDAO.existsByUsername(user.getUsername());
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void shouldReturnTrueWhenUsernameExistsButIsInactive() throws Exception {
+
+        User user = createTestUser();
+        userDAO.softDelete(user.getId());
+
+        boolean exists = userDAO.existsByUsername(user.getUsername());
+
+        // A diferencia de findByUsername, existsByUsername NO filtra por active --
+        // debe reflejar lo mismo que el UNIQUE constraint de la BD, que tampoco filtra.
+        assertTrue(exists);
+    }
+
+    @Test
+    void shouldReturnFalseWhenUsernameDoesNotExist() throws Exception {
+
+        boolean exists = userDAO.existsByUsername(generateTestUsername());
+
+        assertFalse(exists);
+    }
+
     private User createTestUser() throws Exception {
 
         User user = new User();
