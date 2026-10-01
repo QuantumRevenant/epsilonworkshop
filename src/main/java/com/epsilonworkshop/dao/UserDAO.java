@@ -19,8 +19,8 @@ import java.util.Optional;
  *
  * @author sebap
  */
-public class UserDAO extends BaseDAO{
-    
+public class UserDAO extends BaseDAO {
+
     public UserDAO() {
         super();
     }
@@ -28,7 +28,7 @@ public class UserDAO extends BaseDAO{
     public UserDAO(Connection connection) {
         super(connection);
     }
-  
+
     private static final String INSERT_SQL = """
             INSERT INTO users (
                 username,
@@ -81,6 +81,12 @@ public class UserDAO extends BaseDAO{
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
             """;
+
+    private static final String EXISTS_BY_USERNAME_SQL = """
+        SELECT 1
+        FROM users
+        WHERE username = ?
+        """;
 
     public User create(User user) throws SQLException {
 
@@ -155,8 +161,7 @@ public class UserDAO extends BaseDAO{
         Connection conn = getConnection();
         List<User> users = new ArrayList<>();
 
-        try (PreparedStatement statement = conn.prepareStatement(FIND_ALL_SQL);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = conn.prepareStatement(FIND_ALL_SQL); ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 users.add(mapResultSet(resultSet));
@@ -245,5 +250,22 @@ public class UserDAO extends BaseDAO{
         }
 
         return user;
+    }
+
+    public boolean existsByUsername(String username) throws SQLException {
+
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(EXISTS_BY_USERNAME_SQL)) {
+
+            statement.setString(1, username);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+
+        } finally {
+            closeConnection(conn);
+        }
     }
 }
