@@ -1,4 +1,4 @@
-package com.epsilonworkshop.view;
+package com.epsilonworkshop.view.avances;
 
 import com.epsilonworkshop.dao.WorkOrderDAO;
 import com.epsilonworkshop.model.OrderStatus;
@@ -27,7 +27,7 @@ import java.util.*;
  * que este código Swing es plano y no sigue el formato que exige el editor
  * visual Matisse.
  */
-public class AlgorithmsPanel extends JPanel {
+public class Avance1Panel extends JPanel {
 
     private final WorkOrderDAO workOrderDAO = new WorkOrderDAO();
     private List<WorkOrder> workOrders = new ArrayList<>();
@@ -78,7 +78,7 @@ public class AlgorithmsPanel extends JPanel {
     private JTextField matrixColsField;
     private JTextField matrixFillValueField;
 
-    public AlgorithmsPanel() {
+    public Avance1Panel() {
         algorithms.put("Bubble Sort", new BubbleSort<>());
         algorithms.put("Insertion Sort", new InsertionSort<>());
         algorithms.put("Merge Sort", new MergeSort<>());

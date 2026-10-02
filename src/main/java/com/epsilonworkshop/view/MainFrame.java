@@ -4,6 +4,7 @@
  */
 package com.epsilonworkshop.view;
 
+import com.epsilonworkshop.view.avances.Avance1Panel;
 import javax.swing.*;
 import java.awt.*;
 
@@ -44,7 +45,7 @@ public class MainFrame extends JFrame {
 
     private void openAlgorithmsPanel() {
         JDialog dialog = new JDialog(this, "Algoritmos", false);
-        dialog.setContentPane(new AlgorithmsPanel());
+        dialog.setContentPane(new Avance1Panel());
         dialog.setSize(900, 600);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
