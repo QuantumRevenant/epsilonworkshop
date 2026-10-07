@@ -4,6 +4,7 @@
  */
 package com.epsilonworkshop.util.list;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -100,5 +101,20 @@ public class CircularSinglyLinkedListTest {
     @Test
     void shouldThrowOnInvalidIndex() {
         assertThrows(IndexOutOfBoundsException.class, () -> list.readAt(0));
+    }
+
+    @Test
+    void shouldDescribeNextAsCircularAtTail() {
+        list.insertLast("A");
+        list.insertLast("B");
+        list.insertLast("C");
+
+        List<NodeInfo> nodes = list.describeNodes();
+
+        // El último NO debe decir "null" -- debe apuntar de vuelta al inicio
+        String tailNext = nodes.get(2).nextRef();
+        assertTrue(tailNext.contains("Nodo[0]"));
+        assertTrue(tailNext.contains("circular"));
+        assertFalse(tailNext.equals("null"));
     }
 }

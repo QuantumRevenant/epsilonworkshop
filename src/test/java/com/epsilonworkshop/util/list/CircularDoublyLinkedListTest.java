@@ -4,6 +4,7 @@
  */
 package com.epsilonworkshop.util.list;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -97,5 +98,23 @@ public class CircularDoublyLinkedListTest {
     @Test
     void shouldThrowOnInvalidIndex() {
         assertThrows(IndexOutOfBoundsException.class, () -> list.readAt(0));
+    }
+
+    @Test
+    void shouldDescribeBothEndsAsCircularNeverNull() {
+        list.insertLast("A");
+        list.insertLast("B");
+        list.insertLast("C");
+
+        List<NodeInfo> nodes = list.describeNodes();
+
+        String headPrev = nodes.get(0).previousRef();
+        String tailNext = nodes.get(2).nextRef();
+
+        // Ninguno de los dos extremos debe ser "null" -- es circular en ambas direcciones
+        assertTrue(headPrev.contains("Nodo[2]"));
+        assertTrue(headPrev.contains("circular"));
+        assertTrue(tailNext.contains("Nodo[0]"));
+        assertTrue(tailNext.contains("circular"));
     }
 }

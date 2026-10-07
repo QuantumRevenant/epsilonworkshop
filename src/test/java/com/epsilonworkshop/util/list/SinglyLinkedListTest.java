@@ -4,6 +4,7 @@
  */
 package com.epsilonworkshop.util.list;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -137,5 +138,19 @@ public class SinglyLinkedListTest {
         // Si head/tail no quedaron null correctamente, esto fallaría o insertaría mal
         list.insertLast("B");
         assertEquals(java.util.List.of("B"), list.toList());
+    }
+
+    @Test
+    void shouldDescribeNodesWithNullAtTailAndNoAccessToPrevious() {
+        list.insertLast("A");
+        list.insertLast("B");
+        list.insertLast("C");
+
+        List<NodeInfo> nodes = list.describeNodes();
+
+        assertEquals(3, nodes.size());
+        assertEquals("—", nodes.get(2).nextRef()); // el último no tiene siguiente
+        assertTrue(nodes.get(1).previousRef().contains("No aplica"));
+        assertEquals("Nodo[2]", nodes.get(1).nextRef()); // el del medio sí referencia al siguiente real
     }
 }
