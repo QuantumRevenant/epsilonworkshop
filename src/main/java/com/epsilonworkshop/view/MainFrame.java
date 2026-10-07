@@ -5,6 +5,7 @@
 package com.epsilonworkshop.view;
 
 import com.epsilonworkshop.view.avances.Avance1Panel;
+import com.epsilonworkshop.view.avances.Avance2Panel;
 import javax.swing.*;
 import java.awt.*;
 
@@ -22,9 +23,6 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(buildMenuBar());
 
-        // Contenido inicial: bienvenida simple.
-        // Cuando existan ClientPanel, VehiclePanel, etc., se reemplaza
-        // por un JTabbedPane o CardLayout que los contenga a todos.
         JLabel placeholder = new JLabel(
                 "Bienvenido a Épsilon Workshop", SwingConstants.CENTER);
         placeholder.setFont(placeholder.getFont().deriveFont(20f));
@@ -35,17 +33,30 @@ public class MainFrame extends JFrame {
         JMenuBar menuBar = new JMenuBar();
 
         JMenu toolsMenu = new JMenu("Herramientas");
-        JMenuItem algorithmsItem = new JMenuItem("Algoritmos (sort/arreglos)");
-        algorithmsItem.addActionListener(e -> openAlgorithmsPanel());
-        toolsMenu.add(algorithmsItem);
+
+        JMenuItem avance1Item = new JMenuItem("Avance 1: Algoritmos (sort/arreglos)");
+        avance1Item.addActionListener(e -> openAvance1Panel());
+        toolsMenu.add(avance1Item);
+
+        JMenuItem avance2Item = new JMenuItem("Avance 2: TADs (listas enlazadas)");
+        avance2Item.addActionListener(e -> openAvance2Panel());
+        toolsMenu.add(avance2Item);
 
         menuBar.add(toolsMenu);
         return menuBar;
     }
 
-    private void openAlgorithmsPanel() {
-        JDialog dialog = new JDialog(this, "Algoritmos", false);
+    private void openAvance1Panel() {
+        JDialog dialog = new JDialog(this, "Avance 1: Algoritmos", false);
         dialog.setContentPane(new Avance1Panel());
+        dialog.setSize(900, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private void openAvance2Panel() {
+        JDialog dialog = new JDialog(this, "Avance 2: TADs", false);
+        dialog.setContentPane(new Avance2Panel());
         dialog.setSize(900, 600);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
