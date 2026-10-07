@@ -11,9 +11,8 @@ import java.util.List;
  * @author sebap
  */
 public interface LinkedListADT<T> {
-    
-    // ================= CRUD =================
 
+    // ================= CRUD =================
     void insertAt(int index, T value);
 
     void insertFirst(T value);
@@ -27,7 +26,6 @@ public interface LinkedListADT<T> {
     T deleteAt(int index);
 
     // ================= Utilidades =================
-
     int size();
 
     boolean isEmpty();
@@ -36,8 +34,13 @@ public interface LinkedListADT<T> {
 
     int indexOf(T value);
 
-    /** Recorre la lista y la vuelca a un List<T> estándar, para pintar en JTable. */
+    /**
+     * Recorre la lista y la vuelca a un List<T> estándar, para pintar en
+     * JTable.
+     */
     List<T> toList();
 
     void clear();
+
+    List<NodeInfo> describeNodes();
 }

@@ -15,6 +15,7 @@ import java.util.Objects;
 public final class DoublyLinkedList<T> implements LinkedListADT<T> {
 
     private static class Node<T> {
+
         T value;
         Node<T> prev;
         Node<T> next;
@@ -161,12 +162,27 @@ public final class DoublyLinkedList<T> implements LinkedListADT<T> {
         size = 0;
     }
 
-    // ================= privados =================
+    @Override
+    public List<NodeInfo> describeNodes() {
+        List<NodeInfo> result = new ArrayList<>(size);
+        Node<T> current = head;
+        int index = 0;
+        while (current != null) {
+            String prevRef = (current.prev != null) ? "Nodo[" + (index - 1) + "]" : "—";
+            String nextRef = (current.next != null) ? "Nodo[" + (index + 1) + "]" : "—";
+            result.add(new NodeInfo(index, String.valueOf(current.value), prevRef, nextRef));
+            current = current.next;
+            index++;
+        }
+        return result;
+    }
 
+    // ================= privados =================
     /**
-     * Recorre desde head o desde tail, lo que esté más cerca del índice buscado.
-     * Ventaja real de la doble enlazada frente a la simple: en el peor caso
-     * (índice cerca del final), evita recorrer toda la lista desde el inicio.
+     * Recorre desde head o desde tail, lo que esté más cerca del índice
+     * buscado. Ventaja real de la doble enlazada frente a la simple: en el peor
+     * caso (índice cerca del final), evita recorrer toda la lista desde el
+     * inicio.
      */
     private Node<T> nodeAt(int index) {
         if (index <= size / 2) {

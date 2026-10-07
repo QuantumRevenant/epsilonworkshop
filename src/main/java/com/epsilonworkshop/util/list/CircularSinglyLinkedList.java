@@ -15,6 +15,7 @@ import java.util.Objects;
 public final class CircularSinglyLinkedList<T> implements LinkedListADT<T> {
 
     private static class Node<T> {
+
         T value;
         Node<T> next;
 
@@ -170,8 +171,24 @@ public final class CircularSinglyLinkedList<T> implements LinkedListADT<T> {
         size = 0;
     }
 
-    // ================= privados =================
+    @Override
+    public List<NodeInfo> describeNodes() {
+        List<NodeInfo> result = new ArrayList<>(size);
+        if (head == null) {
+            return result;
+        }
 
+        Node<T> current = head;
+        for (int index = 0; index < size; index++) {
+            String prevRef = "No aplica";
+            String nextRef = (index == size - 1) ? "Nodo[0] (circular)" : "Nodo[" + (index + 1) + "]";
+            result.add(new NodeInfo(index, String.valueOf(current.value), prevRef, nextRef));
+            current = current.next;
+        }
+        return result;
+    }
+
+    // ================= privados =================
     private Node<T> nodeAt(int index) {
         Node<T> current = head;
         for (int i = 0; i < index; i++) {

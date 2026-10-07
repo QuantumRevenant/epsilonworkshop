@@ -155,6 +155,21 @@ public class SinglyLinkedList<T> implements LinkedListADT<T> {
         size = 0;
     }
 
+    @Override
+    public List<NodeInfo> describeNodes() {
+        List<NodeInfo> result = new ArrayList<>(size);
+        Node<T> current = head;
+        int index = 0;
+        while (current != null) {
+            String prevRef = "No aplica";
+            String nextRef = (current.next != null) ? "Nodo[" + (index + 1) + "]" : "—";
+            result.add(new NodeInfo(index, String.valueOf(current.value), prevRef, nextRef));
+            current = current.next;
+            index++;
+        }
+        return result;
+    }
+
     // ================= privados =================
     private Node<T> nodeAt(int index) {
         Node<T> current = head;

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
 /**
  *
  * @author sebap
@@ -16,6 +15,7 @@ import java.util.Objects;
 public final class CircularDoublyLinkedList<T> implements LinkedListADT<T> {
 
     private static class Node<T> {
+
         T value;
         Node<T> prev;
         Node<T> next;
@@ -177,9 +177,27 @@ public final class CircularDoublyLinkedList<T> implements LinkedListADT<T> {
         size = 0;
     }
 
-    // ================= privados =================
+    @Override
+    public List<NodeInfo> describeNodes() {
+        List<NodeInfo> result = new ArrayList<>(size);
+        if (head == null) {
+            return result;
+        }
 
-    /** Mismo truco de la doble lineal: recorre desde el extremo más cercano. */
+        Node<T> current = head;
+        for (int index = 0; index < size; index++) {
+            String prevRef = (index == 0) ? "Nodo[" + (size - 1) + "] (circular)" : "Nodo[" + (index - 1) + "]";
+            String nextRef = (index == size - 1) ? "Nodo[0] (circular)" : "Nodo[" + (index + 1) + "]";
+            result.add(new NodeInfo(index, String.valueOf(current.value), prevRef, nextRef));
+            current = current.next;
+        }
+        return result;
+    }
+
+    // ================= privados =================
+    /**
+     * Mismo truco de la doble lineal: recorre desde el extremo más cercano.
+     */
     private Node<T> nodeAt(int index) {
         if (index <= size / 2) {
             Node<T> current = head;
