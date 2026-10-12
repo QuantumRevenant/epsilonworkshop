@@ -150,7 +150,7 @@ INSERT INTO "users"
 VALUES
     (
         'admin',
-        '$2a$10$w8.gq2R9C1s5/gG3fWj4/.yYkZ.zJ7PzQ5fK9k2a4J2.7Q0m4bO7O',
+        '$2a$10$BwGDpJbFlzVd1dgIDuv9ROfLJQWF738Ml2BA0GxnSFqEalYTiQs1W',
         'admin',
         'Carlos',
         'Ramírez',
@@ -158,7 +158,7 @@ VALUES
     ),
     (
         'mecanico01',
-        '$2a$10$w8.gq2R9C1s5/gG3fWj4/.yYkZ.zJ7PzQ5fK9k2a4J2.7Q0m4bO7O',
+        '$2a$10$Pp.KB/EQeH6FKXe8bCACwuFDMkkpG6GJcTufOj4fy6JvGFq43eB3.',
         'mechanic',
         'Luis',
         'García',
@@ -166,7 +166,7 @@ VALUES
     ),
     (
         'mecanico02',
-        'REEMPLAZAR_CON_HASH_BCRYPT',
+        '$2a$10$kwmKQZEHjCcy9WlrwnD4h.T5Wzs3eHPUi4Y6AdlJ7RSLXJgkDJjxS',
         'mechanic',
         'Miguel',
         'Quispe',
