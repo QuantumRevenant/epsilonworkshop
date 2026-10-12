@@ -98,7 +98,7 @@ Una orden de trabajo puede crearse **sin mecánico asignado** (`mechanic_id` nul
 El Administrador puede reasignar el mecánico de una orden **en cualquier momento**, mientras la orden no esté en un estado final (`terminado` o `cancelado`). Cada reasignación se registra en el historial de auditoría (RN-08).
 
 **RN-04b — Autoasignación de mecánico (orden sin asignar).**
-Un Mecánico puede autoasignarse una orden de trabajo **únicamente si esta no tiene mecánico asignado** (`mechanic_id IS NULL`). Una vez que un mecánico se autoasigna una orden, **no puede soltarla ni reasignarla** — a partir de ese momento, solo el Administrador puede modificar la asignación de mecánico de esa orden (RN-04). Un Mecánico no puede autoasignarse una orden que ya tiene otro mecánico asignado, ni reasignar una orden ajena a sí mismo. Esta regla no aplica a órdenes en estado final (`terminado` o `cancelado`), consistente con RN-04. Cada autoasignación se registra en el historial de auditoría igual que cualquier reasignación (RN-08), con `change_type = mechanic_reassignment`.
+Un Mecánico puede autoasignarse una orden de trabajo **únicamente si esta no tiene mecánico asignado** (`mechanic_id IS NULL`). Esta restricción aplica tanto **al crear** una orden nueva (RF-05) como al asignarse una orden existente que quedó sin asignar (RF-07b): en ambos casos, un Mecánico solo puede indicar su propio `mechanic_id`, nunca el de otro mecánico — hacerlo en la creación equivaldría a saltarse por otra vía la restricción de reasignación. Un Administrador no tiene esta restricción: puede crear o asignar una orden a cualquier mecánico activo. Una vez que un mecánico se autoasigna una orden (al crearla o después), **no puede soltarla ni reasignarla** — a partir de ese momento, solo el Administrador puede modificar la asignación de mecánico de esa orden (RN-04). Un Mecánico no puede autoasignarse una orden que ya tiene otro mecánico asignado, ni reasignar una orden ajena a sí mismo. Esta regla no aplica a órdenes en estado final (`terminado` o `cancelado`), consistente con RN-04. Cada autoasignación posterior a la creación se registra en el historial de auditoría igual que cualquier reasignación (RN-08), con `change_type = mechanic_reassignment`.
 
 **RN-05 — Estados de una orden de trabajo.**
 Cuatro estados: `pendiente`, `en_progreso`, `terminado`, `cancelado`.
@@ -122,10 +122,10 @@ Toda orden de trabajo mantiene una tabla de historial (`work_order_history`) que
 El Administrador puede cambiar el estado de **cualquier** orden. El Mecánico solo puede cambiar el estado de las órdenes **que tiene asignadas actualmente**. Una orden sin mecánico asignado no puede tener su estado modificado por un Mecánico bajo ningún caso — debe primero autoasignársela (RN-04b) o esperar a que el Administrador la asigne (RN-04).
 
 **RN-10 — Transferencia de propiedad de vehículo.**
-Un vehículo puede transferirse a otro cliente (`vehicles.client_id` es editable). El historial de órdenes de trabajo del vehículo permanece intacto y no se reasigna — las órdenes pasadas siguen asociadas al mismo `vehicle_id`, independientemente de quién sea el dueño actual.
+Un vehículo puede transferirse a otro cliente (`vehicles.client_id` es editable). El historial de órdenes de trabajo del vehículo permanece intacto y no se reasigna — las órdenes pasadas siguen asociadas al mismo `vehicle_id`, independientemente de quién sea el dueño actual. La transferencia es una operación explícita y exclusiva del Administrador, con validación de que el cliente destino exista; la edición general de un vehículo **no** puede cambiar su dueño: aunque los datos recibidos traigan otro `client_id`, se conserva el existente. Esto deja un único punto donde aplicar reglas futuras de transferencia.
 
 **RN-11 — Mecánicos inactivos.**
-Un mecánico marcado como `active = false` no puede ser asignado a **nuevas** órdenes ni reasignado a órdenes existentes, pero permanece visible en el historial de órdenes que ya tenía asignadas.
+Un mecánico marcado como `active = false` no puede ser asignado a **nuevas** órdenes ni reasignado a órdenes existentes, pero permanece visible en el historial de órdenes que ya tenía asignadas. Esta restricción se valida tanto al crear una orden con mecánico como al reasignar. Al desactivar un mecánico, sus órdenes **no finalizadas** (`pendiente` o `en_progreso`) quedan automáticamente sin asignar (`mechanic_id = NULL`), de modo que reaparezcan como pendientes de asignación y ninguna orden en curso quede a cargo de un mecánico inactivo. Cada desasignación se audita (RN-08) con `change_type = mechanic_reassignment` y valor nuevo "sin asignar", por lo que se conserva quién la tenía. Las órdenes finalizadas conservan su mecánico. La operación completa es atómica: o se desasignan todas y se desactiva el mecánico, o no cambia nada.
 
 **RN-12 — Unicidad de datos reales.**
 La placa del vehículo es única (`UNIQUE`). El documento de identidad del cliente es único **por tipo de documento**: la restricción es `UNIQUE(document_type, document)`. Esto evita que dos clientes compartan el mismo número bajo el mismo tipo de documento (ej. dos DNI "12345678"), pero permite que el mismo número coexista bajo tipos distintos sin conflicto (ej. un DNI "12345678" y un RUC "12345678" no colisionan). `document_type` está restringido a los valores `DNI`, `CE`, `RUC` (`CHECK` en base de datos, enum `DocumentType` en Java).
@@ -149,14 +149,15 @@ Un mecánico puede tener `users.active = true` (puede loguearse) y `mechanics.ac
 - **RF-02:** CRUD de clientes (con baja lógica, RN-01), incluyendo tipo y número de documento (RN-12).
 - **RF-03:** CRUD de vehículos, asociados a un cliente, con soporte para transferencia de dueño (RN-10).
 - **RF-04:** CRUD de mecánicos, con baja lógica (RN-01) y estado activo/inactivo (RN-11).
-- **RF-05:** Registro de orden de trabajo asociada a un vehículo, con mecánico opcional al momento de creación (RN-03).
+- **RF-05:** Registro de orden de trabajo asociada a un vehículo existente, con mecánico opcional al momento de creación (RN-03). Si se indica un mecánico, se valida que esté activo (RN-11) y, si quien crea es un Mecánico, que sea él mismo (RN-04b).
 - **RF-06:** Cambio de estado de una orden de trabajo, respetando las transiciones válidas (RN-06) y bloqueo de estados finales (RN-07).
 - **RF-07:** Reasignación de mecánico en órdenes no finalizadas (RN-04), solo por el Administrador.
 - **RF-07b:** Autoasignación de un Mecánico a una orden de trabajo sin mecánico asignado, en órdenes no finalizadas (RN-04b). El Mecánico no puede revertir esta acción; solo el Administrador puede modificar la asignación una vez hecha.
 - **RF-08:** Registro automático en `work_order_history` de cada cambio de estado y reasignación (RN-08).
 - **RF-09:** El Administrador tiene acceso completo a todas las funcionalidades.
 - **RF-10:** El Mecánico solo visualiza y actualiza el estado de las órdenes que tiene asignadas (RN-09).
-- **RF-17:** El Administrador puede activar/desactivar cuentas de usuario (RN-14), independientemente del estado de `mechanics.active`.
+- **RF-17:** El Administrador puede activar/desactivar cuentas de usuario (RN-14), independientemente del estado de `mechanics.active`. Un Administrador no puede desactivar su propia cuenta, para evitar quedar sin ningún administrador capaz de iniciar sesión.
+- **RF-18:** El Administrador puede crear cuentas de Administrador desde la aplicación, sin acceder a la base de datos. El primer administrador del sistema se siembra mediante `99-seed.sql`. El `username` debe ser único incluso respecto a cuentas inactivas, porque la restricción `UNIQUE` de la base no distingue por estado. La consulta y el listado de cuentas de usuario están restringidos al Administrador.
 
 ### Should have
 - **RF-11:** Gestión de catálogo de servicios (nombre, descripción, precio referencial).
@@ -203,9 +204,20 @@ Un mecánico puede tener `users.active = true` (puede loguearse) y `mechanics.ac
 
 ---
 
-## 9. Próximos pasos
+## 8b. Extensiones futuras consideradas (fuera de alcance actual)
 
-1. Completar la lógica de negocio en la capa Controller (RN-01 a RN-14), actualmente cascarones sin validación.
-2. Escribir tests JUnit de Controller para los casos críticos: transiciones de estado inválidas, permisos por rol, mecánico/usuario inactivo.
-3. Confirmar decisión de GUI: Swing vs JavaFX.
-4. Avanzar a la capa View: `LoginFrame` como punto de entrada real, luego `MainFrame` con menú condicionado por rol, luego los paneles restantes.
+Ideas evaluadas durante el desarrollo que **no se implementan en esta versión**, pero quedan documentadas para una eventual iteración posterior del sistema:
+
+- **"Mecánico jefe" / mecánico con privilegios ampliados.** Un tercer nivel de autorización, intermedio entre `MECHANIC` y `ADMIN` — por ejemplo, un mecánico de confianza capaz de reasignar órdenes o actuar sobre órdenes ajenas sin ser administrador completo. Hoy el sistema solo contempla dos roles (`Role`: `ADMIN`, `MECHANIC`), sin niveles intermedios, y toda la lógica de permisos en los Controllers (`WorkOrderController`, `ClientController`, `VehicleController`) está escrita y testeada asumiendo esta dicotomía estricta. Agregar un tercer nivel implicaría: (a) extender el modelo de roles (nuevo valor de enum o un flag adicional tipo `mechanics.is_lead`), (b) revisar cada chequeo de permisos ya implementado para decidir en qué rama cae el nuevo nivel, y (c) posiblemente modificar el `CHECK` de `role` en `01-schema.sql`. Se evalúa como una iteración separada, no como parte del alcance Must/Should/Could actual.
+
+## 9. Estado y próximos pasos
+
+**Completado:**
+- Capa de datos (DAOs) y modelos.
+- Controllers con las reglas RN-01 a RN-14 (más RN-04b), con pruebas unitarias (Mockito) y de integración (transacciones sobre PostgreSQL real).
+- Paneles de demostración académica: Avance 1 (algoritmos y arreglos) y Avance 2 (listas enlazadas).
+
+**Pendiente:**
+1. Confirmar decisión de GUI: Swing vs JavaFX (se continúa con Swing).
+2. Capa View: `LoginFrame` como punto de entrada real, luego `MainFrame` con menú condicionado por rol, luego los paneles de clientes, vehículos, mecánicos y órdenes.
+3. Should have: catálogo de servicios y reportes (RF-11 a RF-13), si el tiempo lo permite.
