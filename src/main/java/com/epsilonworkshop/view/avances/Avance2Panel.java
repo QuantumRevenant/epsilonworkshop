@@ -4,12 +4,14 @@ import com.epsilonworkshop.dao.WorkOrderDAO;
 import com.epsilonworkshop.model.Client;
 import com.epsilonworkshop.model.WorkOrder;
 import com.epsilonworkshop.util.list.*;
+import com.epsilonworkshop.util.sort.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,8 @@ public class Avance2Panel extends JPanel {
 
     private final Map<String, Supplier<LinkedListADT<Client>>> clientListFactories = new LinkedHashMap<>();
     private final Map<String, Supplier<LinkedListADT<WorkOrder>>> workOrderListFactories = new LinkedHashMap<>();
+    private final Map<String, ListSorter.AlgorithmFactory> sortAlgorithms = new LinkedHashMap<>();
+    private final Map<String, Comparator<Client>> clientSortKeys = new LinkedHashMap<>();
 
     // --- Tab 1: CRUD manual con Client ---
     private JComboBox<String> crudTypeSelector;
@@ -46,6 +50,8 @@ public class Avance2Panel extends JPanel {
     private JTextField crudDocumentField;
     private JTextField crudIndexField;
     private JTextField crudRandomCountField;
+    private JComboBox<String> crudSortKeySelector;
+    private JComboBox<String> crudSortSelector;
 
     // --- Tab 2: Comparativa de rendimiento ---
     private JTextField comparisonCountField;
@@ -74,6 +80,21 @@ public class Avance2Panel extends JPanel {
         workOrderListFactories.put("Lista Doble", DoublyLinkedList::new);
         workOrderListFactories.put("Circular Simple", CircularSinglyLinkedList::new);
         workOrderListFactories.put("Circular Doble", CircularDoublyLinkedList::new);
+
+        sortAlgorithms.put("Bubble Sort", BubbleSort::new);
+        sortAlgorithms.put("Selection Sort", SelectionSort::new);
+        sortAlgorithms.put("Insertion Sort", InsertionSort::new);
+        sortAlgorithms.put("Shell Sort", ShellSort::new);
+        sortAlgorithms.put("Merge Sort", MergeSort::new);
+        sortAlgorithms.put("Quick Sort", QuickSort::new);
+
+        // el orden vive en el panel: Client no se modifica
+        Comparator<String> text = Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER);
+        clientSortKeys.put("Apellido", Comparator.comparing(Client::getPaternalSurname, text)
+                .thenComparing(Client::getName, text));
+        clientSortKeys.put("Nombre", Comparator.comparing(Client::getName, text)
+                .thenComparing(Client::getPaternalSurname, text));
+        clientSortKeys.put("Documento", Comparator.comparing(Client::getDocument, text));
 
         setLayout(new BorderLayout());
 
@@ -153,6 +174,18 @@ public class Avance2Panel extends JPanel {
         randomPanel.add(crudRandomCountField);
         randomPanel.add(randomFillButton);
         formPanel.add(randomPanel);
+
+        JPanel sortPanel = new JPanel();
+        crudSortKeySelector = new JComboBox<>(clientSortKeys.keySet().toArray(new String[0]));
+        crudSortSelector = new JComboBox<>(sortAlgorithms.keySet().toArray(new String[0]));
+        JButton sortButton = new JButton("Ordenar lista");
+        sortButton.addActionListener(e -> crudSort());
+        sortPanel.add(new JLabel("Ordenar por:"));
+        sortPanel.add(crudSortKeySelector);
+        sortPanel.add(new JLabel("Algoritmo:"));
+        sortPanel.add(crudSortSelector);
+        sortPanel.add(sortButton);
+        formPanel.add(sortPanel);
 
         panel.add(formPanel, BorderLayout.NORTH);
 
@@ -307,6 +340,20 @@ public class Avance2Panel extends JPanel {
         } catch (NumberFormatException ex) {
             crudResultLabel.setText("La cantidad debe ser un número entero");
         }
+    }
+
+    private void crudSort() {
+        if (crudList.size() < 2) {
+            crudResultLabel.setText("Se necesitan al menos 2 elementos para ordenar");
+            return;
+        }
+        String keyName = (String) crudSortKeySelector.getSelectedItem();
+        String algorithmName = (String) crudSortSelector.getSelectedItem();
+        long startNanos = System.nanoTime();
+        ListSorter.sort(crudList, clientSortKeys.get(keyName), sortAlgorithms.get(algorithmName));
+        long elapsedMicros = (System.nanoTime() - startNanos) / 1_000;
+        crudResultLabel.setText("Lista ordenada por " + keyName + " con " + algorithmName + " en " + elapsedMicros + " µs");
+        refreshCrudTable();
     }
 
     private void refreshCrudTable() {
