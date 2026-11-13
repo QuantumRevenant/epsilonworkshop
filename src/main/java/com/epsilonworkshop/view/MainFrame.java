@@ -1,64 +1,285 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package com.epsilonworkshop.view;
 
+import com.epsilonworkshop.util.list.DoublyLinkedList;
+import com.epsilonworkshop.util.list.LinkedListADT;
 import com.epsilonworkshop.view.avances.Avance1Panel;
 import com.epsilonworkshop.view.avances.Avance2Panel;
-import javax.swing.*;
-import java.awt.*;
+import com.epsilonworkshop.config.SessionManager;
+import com.epsilonworkshop.controller.AuthController;
+import com.epsilonworkshop.model.User;
+import com.epsilonworkshop.model.Role;
+import java.awt.CardLayout;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
 
 /**
  *
  * @author sebap
  */
-public class MainFrame extends JFrame {
+public class MainFrame extends javax.swing.JFrame {
 
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainFrame.class.getName());
+    private boolean isAdmin;
+    private final CardLayout cardLayout;
+
+    private final LinkedListADT<String> navigationHistory
+            = new DoublyLinkedList<>();
+
+    private static final String HOME = "home";
+    private static final String ORDERS = "orders";
+    private static final String CLIENTS = "clients";
+    private static final String VEHICLES = "vehicles";
+    private static final String MECHANICS = "mechanics";
+    private static final String USERS = "users";
+
+    /**
+     * Creates new form MainFrame
+     */
     public MainFrame() {
-        setTitle("Épsilon Workshop");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 650);
+        initComponents();
+
+        User user = SessionManager.getCurrentUser();
+        isAdmin = user.getRole() == Role.ADMIN;
+
+        lblCurrentUser.setText(
+                user.getName() + " " + user.getPaternalSurname()
+                + " (" + (user.getRole() == Role.ADMIN ? "Administrador" : "Mecánico") + ")"
+        );
+
+        menuManagement.setVisible(isAdmin);
+
+        cardLayout = (CardLayout) contentPanel.getLayout();
+
+        registerCards();
+
+        // Navegación entre paneles
+        itemWorkOrders.addActionListener(e -> navigate(ORDERS));
+        itemClients.addActionListener(e -> navigate(CLIENTS));
+        itemVehicles.addActionListener(e -> navigate(VEHICLES));
+        itemMechanics.addActionListener(e -> navigate(MECHANICS));
+        itemUsers.addActionListener(e -> navigate(USERS));
+
+        navigate(HOME);
+
+        itemLogout.addActionListener(e -> logout());
+
         setLocationRelativeTo(null);
-
-        setJMenuBar(buildMenuBar());
-
-        JLabel placeholder = new JLabel(
-                "Bienvenido a Épsilon Workshop", SwingConstants.CENTER);
-        placeholder.setFont(placeholder.getFont().deriveFont(20f));
-        add(placeholder, BorderLayout.CENTER);
     }
 
-    private JMenuBar buildMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
+    private void registerCards() {
+        contentPanel.add(new HomePanel(), HOME);
+        contentPanel.add(new WorkOrderPanel(), ORDERS);
 
-        JMenu toolsMenu = new JMenu("Herramientas");
-
-        JMenuItem avance1Item = new JMenuItem("Avance 1: Algoritmos (sort/arreglos)");
-        avance1Item.addActionListener(e -> openAvance1Panel());
-        toolsMenu.add(avance1Item);
-
-        JMenuItem avance2Item = new JMenuItem("Avance 2: TADs (listas enlazadas)");
-        avance2Item.addActionListener(e -> openAvance2Panel());
-        toolsMenu.add(avance2Item);
-
-        menuBar.add(toolsMenu);
-        return menuBar;
+        if (isAdmin) {
+            contentPanel.add(new ClientPanel(), CLIENTS);
+            contentPanel.add(new VehiclePanel(), VEHICLES);
+            contentPanel.add(new MechanicPanel(), MECHANICS);
+            contentPanel.add(new UserPanel(), USERS);
+        }
     }
 
-    private void openAvance1Panel() {
-        JDialog dialog = new JDialog(this, "Avance 1: Algoritmos", false);
-        dialog.setContentPane(new Avance1Panel());
+    private void navigate(String cardId) {    // Evita guardar la misma pantalla consecutivamente.
+        if (!navigationHistory.isEmpty()
+                && navigationHistory.readAt(navigationHistory.size() - 1).equals(cardId)) {
+            return;
+        }
+        if (!isAdmin && !ORDERS.equals(cardId) && !HOME.equals(cardId)) {
+            return;
+        }
+
+        navigationHistory.insertLast(cardId);
+        cardLayout.show(contentPanel, cardId);
+
+        updateBackButton();
+    }
+
+    private void goBack() {
+        // Necesitamos al menos dos pantallas en el historial.
+        if (navigationHistory.size() < 2) {
+            return;
+        }
+
+        // Elimina la pantalla actual.
+        navigationHistory.deleteAt(navigationHistory.size() - 1);
+
+        // Recupera y muestra la pantalla anterior.
+        String previousCard = navigationHistory.readAt(navigationHistory.size() - 1);
+        cardLayout.show(contentPanel, previousCard);
+
+        updateBackButton();
+    }
+
+    private void updateBackButton() {
+        btnBack.setEnabled(navigationHistory.size() > 1);
+    }
+
+    private void logout() {
+        new AuthController().logout();
+        new LoginFrame().setVisible(true);
+        dispose();
+    }
+
+    private void openDialog(String title, JPanel panel) {
+        JDialog dialog = new JDialog(this, title, false);
+        dialog.setContentPane(panel);
+        dialog.pack();
         dialog.setSize(900, 600);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
-    private void openAvance2Panel() {
-        JDialog dialog = new JDialog(this, "Avance 2: TADs", false);
-        dialog.setContentPane(new Avance2Panel());
-        dialog.setSize(900, 600);
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        contentPanel = new javax.swing.JPanel();
+        statusPanel = new javax.swing.JPanel();
+        btnBack = new javax.swing.JButton();
+        lblCurrentUser = new javax.swing.JLabel();
+        menuBar = new javax.swing.JMenuBar();
+        menuWork = new javax.swing.JMenu();
+        itemWorkOrders = new javax.swing.JMenuItem();
+        menuManagement = new javax.swing.JMenu();
+        itemClients = new javax.swing.JMenuItem();
+        itemVehicles = new javax.swing.JMenuItem();
+        itemMechanics = new javax.swing.JMenuItem();
+        itemUsers = new javax.swing.JMenuItem();
+        menuTools = new javax.swing.JMenu();
+        itemAvance1 = new javax.swing.JMenuItem();
+        itemAvance2 = new javax.swing.JMenuItem();
+        menuSession = new javax.swing.JMenu();
+        itemLogout = new javax.swing.JMenuItem();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Épsilon Workshop");
+        setPreferredSize(new java.awt.Dimension(1000, 650));
+
+        contentPanel.setLayout(new java.awt.CardLayout());
+        getContentPane().add(contentPanel, java.awt.BorderLayout.CENTER);
+
+        statusPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        statusPanel.setPreferredSize(new java.awt.Dimension(100, 40));
+        statusPanel.setLayout(new java.awt.BorderLayout());
+
+        btnBack.setText("Volver");
+        btnBack.addActionListener(this::btnBackActionPerformed);
+        statusPanel.add(btnBack, java.awt.BorderLayout.WEST);
+
+        lblCurrentUser.setText("Demo Usuario (Admin)");
+        statusPanel.add(lblCurrentUser, java.awt.BorderLayout.EAST);
+
+        getContentPane().add(statusPanel, java.awt.BorderLayout.SOUTH);
+
+        menuWork.setText("Trabajo");
+
+        itemWorkOrders.setText("Órdenes de trabajo");
+        menuWork.add(itemWorkOrders);
+
+        menuBar.add(menuWork);
+
+        menuManagement.setText("Gestión");
+
+        itemClients.setText("Clientes");
+        menuManagement.add(itemClients);
+
+        itemVehicles.setText("Vehículos");
+        menuManagement.add(itemVehicles);
+
+        itemMechanics.setText("Mecánicos");
+        menuManagement.add(itemMechanics);
+
+        itemUsers.setText("Usuarios");
+        menuManagement.add(itemUsers);
+
+        menuBar.add(menuManagement);
+
+        menuTools.setText("Herramientas");
+
+        itemAvance1.setText("Avance 1: Algoritmos");
+        itemAvance1.addActionListener(this::itemAvance1ActionPerformed);
+        menuTools.add(itemAvance1);
+
+        itemAvance2.setText("Avance 2: TADs");
+        itemAvance2.addActionListener(this::itemAvance2ActionPerformed);
+        menuTools.add(itemAvance2);
+
+        menuBar.add(menuTools);
+
+        menuSession.setText("Sesión");
+
+        itemLogout.setText("Cerrar Sesión");
+        menuSession.add(itemLogout);
+
+        menuBar.add(menuSession);
+
+        setJMenuBar(menuBar);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {
+        goBack();
     }
+
+    private void itemAvance1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAvance1ActionPerformed
+        openDialog("Avance 1: Algoritmos", new Avance1Panel());
+    }//GEN-LAST:event_itemAvance1ActionPerformed
+
+    private void itemAvance2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAvance2ActionPerformed
+        openDialog("Avance 2: TADs", new Avance2Panel());
+    }//GEN-LAST:event_itemAvance2ActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(() -> new MainFrame().setVisible(true));
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBack;
+    private javax.swing.JPanel contentPanel;
+    private javax.swing.JMenuItem itemAvance1;
+    private javax.swing.JMenuItem itemAvance2;
+    private javax.swing.JMenuItem itemClients;
+    private javax.swing.JMenuItem itemLogout;
+    private javax.swing.JMenuItem itemMechanics;
+    private javax.swing.JMenuItem itemUsers;
+    private javax.swing.JMenuItem itemVehicles;
+    private javax.swing.JMenuItem itemWorkOrders;
+    private javax.swing.JLabel lblCurrentUser;
+    private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenu menuManagement;
+    private javax.swing.JMenu menuSession;
+    private javax.swing.JMenu menuTools;
+    private javax.swing.JMenu menuWork;
+    private javax.swing.JPanel statusPanel;
+    // End of variables declaration//GEN-END:variables
 }
