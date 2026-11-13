@@ -10,6 +10,7 @@ import com.epsilonworkshop.exception.UnauthorizedActionException;
 import com.epsilonworkshop.model.Role;
 import com.epsilonworkshop.model.User;
 import com.epsilonworkshop.util.PasswordHasher;
+import com.epsilonworkshop.util.Validations;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -38,7 +39,11 @@ public class UserController {
     ) throws UnauthorizedActionException, DuplicateUsernameException, SQLException {
 
         requireAdmin(actingUser);
-
+        
+        if (!Validations.isValidPassword(plainPassword)) {
+            throw new IllegalArgumentException("La contraseña debe tener entre 8 y 72 caracteres");
+        }
+        
         if (userDAO.existsByUsername(username)) {
             throw new DuplicateUsernameException(
                     "Ya existe un usuario con username=" + username

@@ -35,7 +35,6 @@ public class UserControllerTest {
     private UserController controller;
 
     // ---------- createAdmin ----------
-
     @Test
     void shouldCreateAdminAccount() throws Exception {
         User actingAdmin = createTestUser(1L, Role.ADMIN);
@@ -77,7 +76,7 @@ public class UserControllerTest {
         assertThrows(
                 DuplicateUsernameException.class,
                 () -> controller.createAdmin(
-                        "admin_existente", "pass123", "Carlos", "Diaz", null, actingAdmin
+                        "admin_existente", "pass12345", "Carlos", "Diaz", null, actingAdmin
                 )
         );
 
@@ -85,7 +84,6 @@ public class UserControllerTest {
     }
 
     // ---------- toggleActive ----------
-
     @Test
     void shouldDeactivateAnotherUserAsAdmin() throws Exception {
         User actingAdmin = createTestUser(1L, Role.ADMIN);
@@ -168,7 +166,6 @@ public class UserControllerTest {
     }
 
     // ---------- findById / findAll (restringidos a admin) ----------
-
     @Test
     void shouldAllowAdminToFindUserById() throws Exception {
         User actingAdmin = createTestUser(1L, Role.ADMIN);
@@ -217,6 +214,33 @@ public class UserControllerTest {
         assertNotNull(result);
     }
 
+    @Test
+    void shouldThrowIllegalArgumentExceptionWhenPasswordIsTooShort() throws Exception {
+        User actingAdmin = createTestUser(1L, Role.ADMIN);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.createAdmin(
+                        "nuevo_admin", "corta", "Carlos", "Diaz", null, actingAdmin
+                )
+        );
+
+        verify(userDAO, never()).existsByUsername(any());
+        verify(userDAO, never()).create(any());
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionWhenPasswordIsNull() throws Exception {
+        User actingAdmin = createTestUser(1L, Role.ADMIN);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.createAdmin(
+                        "nuevo_admin", null, "Carlos", "Diaz", null, actingAdmin
+                )
+        );
+    }
+    
     // ---------- helpers ----------
 
     private User createTestUser(Long id, Role role) {

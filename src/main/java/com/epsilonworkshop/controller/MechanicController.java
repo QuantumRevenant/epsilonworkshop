@@ -13,6 +13,7 @@ import com.epsilonworkshop.exception.DuplicateUsernameException;
 import com.epsilonworkshop.exception.UnauthorizedActionException;
 import com.epsilonworkshop.model.*;
 import com.epsilonworkshop.util.PasswordHasher;
+import com.epsilonworkshop.util.Validations;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -67,7 +68,11 @@ public class MechanicController {
     ) throws UnauthorizedActionException, DuplicateUsernameException, SQLException {
 
         requireAdmin(actingUser);
-
+        
+        if (!Validations.isValidPassword(plainPassword)) {
+            throw new IllegalArgumentException("La contraseña debe tener entre 8 y 72 caracteres");
+        }
+        
         boolean ownsConnection = (externalConnection == null);
         Connection conn = ownsConnection ? DBConnection.getConnection() : externalConnection;
 

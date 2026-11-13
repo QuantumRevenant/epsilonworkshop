@@ -58,7 +58,6 @@ public class MechanicControllerIntegrationTest {
     }
 
     // ---------- create ----------
-
     @Test
     void shouldCreateUserAndMechanicTogether() throws Exception {
         User admin = createTestAdmin();
@@ -85,13 +84,13 @@ public class MechanicControllerIntegrationTest {
         String username = generateTestUsername();
 
         controller.create(
-                username, "pass1", "Juan", "Perez", null, "Diagnóstico", admin
+                username, "pass12345", "Juan", "Perez", null, "Diagnóstico", admin
         );
 
         assertThrows(
                 DuplicateUsernameException.class,
                 () -> controller.create(
-                        username, "pass2", "Otro", "Nombre", null, "Frenos", admin
+                        username, "pass23456", "Otro", "Nombre", null, "Frenos", admin
                 )
         );
     }
@@ -101,13 +100,13 @@ public class MechanicControllerIntegrationTest {
         User admin = createTestAdmin();
         String username = generateTestUsername();
 
-        controller.create(username, "pass1", "Juan", "Perez", null, "Diagnóstico", admin);
+        controller.create(username, "pass12345", "Juan", "Perez", null, "Diagnóstico", admin);
 
         List<Mechanic> before = mechanicDAO.findAll();
         int countBefore = before.size();
 
         try {
-            controller.create(username, "pass2", "Otro", "Nombre", null, "Frenos", admin);
+            controller.create(username, "pass23456", "Otro", "Nombre", null, "Frenos", admin);
         } catch (DuplicateUsernameException ignored) {
             // esperado
         }
@@ -117,7 +116,6 @@ public class MechanicControllerIntegrationTest {
     }
 
     // ---------- softDelete ----------
-
     @Test
     void shouldSoftDeleteMechanicWithoutAssignedOrders() throws Exception {
         User admin = createTestAdmin();
@@ -180,8 +178,20 @@ public class MechanicControllerIntegrationTest {
         assertEquals("sin asignar", history.get(0).getNewValue());
     }
 
-    // ---------- helpers ----------
+    @Test
+    void shouldThrowIllegalArgumentExceptionWhenPasswordIsTooShort() throws Exception {
+        User admin = createTestAdmin();
 
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.create(
+                        generateTestUsername(), "corta", "Juan", "Perez", null,
+                        "Diagnóstico", admin
+                )
+        );
+    }
+
+    // ---------- helpers ----------
     private User createTestAdmin() {
         User admin = new User();
         admin.setId(1L);
@@ -192,7 +202,7 @@ public class MechanicControllerIntegrationTest {
 
     private Mechanic createTestMechanicInDb() throws Exception {
         Mechanic created = controller.create(
-                generateTestUsername(), "pass123", "Test", "Mechanic", null,
+                generateTestUsername(), "pass12345", "Test", "Mechanic", null,
                 "Diagnóstico", createTestAdmin()
         );
         return created;
