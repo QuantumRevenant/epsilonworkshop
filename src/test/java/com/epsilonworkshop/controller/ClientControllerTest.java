@@ -22,7 +22,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-
 /**
  *
  * @author sebap
@@ -37,7 +36,6 @@ public class ClientControllerTest {
     private ClientController controller;
 
     // ---------- create ----------
-
     @Test
     void shouldCreateClientAsAdmin() throws Exception {
         User admin = createTestUser(Role.ADMIN);
@@ -85,7 +83,6 @@ public class ClientControllerTest {
     }
 
     // ---------- update ----------
-
     @Test
     void shouldUpdateClientAsAdmin() throws Exception {
         User admin = createTestUser(Role.ADMIN);
@@ -145,7 +142,6 @@ public class ClientControllerTest {
     }
 
     // ---------- softDelete ----------
-
     @Test
     void shouldSoftDeleteClientAsAdmin() throws Exception {
         User admin = createTestUser(Role.ADMIN);
@@ -168,7 +164,6 @@ public class ClientControllerTest {
     }
 
     // ---------- findById / findAll (sin restricción de rol) ----------
-
     @Test
     void shouldAllowMechanicToFindClientById() throws Exception {
         User mechanicUser = createTestUser(Role.MECHANIC);
@@ -182,8 +177,25 @@ public class ClientControllerTest {
         assertEquals(client, result.get());
     }
 
-    // ---------- helpers ----------
+    @Test
+    void shouldMentionDeactivatedClientWhenDuplicateDocumentIsInactive() throws Exception {
+        User admin = createTestUser(Role.ADMIN);
+        Client newClient = createTestClient(null, DocumentType.DNI, "12345678");
+        Client inactiveClient = createTestClient(1L, DocumentType.DNI, "12345678");
+        inactiveClient.setActive(false);
 
+        when(clientDAO.findByDocument(DocumentType.DNI, "12345678"))
+                .thenReturn(Optional.of(inactiveClient));
+
+        DuplicateDocumentException ex = assertThrows(
+                DuplicateDocumentException.class,
+                () -> controller.create(newClient, admin)
+        );
+
+        assertTrue(ex.getMessage().contains("desactivado"));
+    }
+
+    // ---------- helpers ----------
     private User createTestUser(Role role) {
         User user = new User();
         user.setId(1L);

@@ -64,6 +64,7 @@ Dado que Backend y Frontend se desarrollan en paralelo (semanas 6-10 y 8-13 resp
 - IDs distribuidos (UUID) — se usa `SERIAL/INTEGER`.
 - Multi-taller / multi-sucursal.
 - Historial de cambios de propietario de un vehículo como entidad propia (se guarda el dueño actual; el historial de *órdenes de trabajo* del vehículo se conserva intacto, pero no se audita explícitamente "quién fue dueño cuándo").
+- Reactivación desde la aplicación de clientes, vehículos y mecánicos dados de baja (RN-01). En esta versión la baja lógica no tiene operación inversa en la interfaz: los registros desactivados no se listan, y recuperar uno requiere intervención directa en la base de datos. Si se intenta registrar un documento que pertenece a un cliente desactivado, el sistema lo informa con un mensaje específico. Las cuentas de usuario se gestionan aparte (RF-17).
 
 ---
 

@@ -41,10 +41,7 @@ public class ClientController {
         );
 
         if (existing.isPresent()) {
-            throw new DuplicateDocumentException(
-                    "Ya existe un cliente con documento "
-                    + client.getDocumentType() + " " + client.getDocument()
-            );
+            throw duplicateFor(client, existing.get());
         }
 
         return clientDAO.create(client);
@@ -60,10 +57,7 @@ public class ClientController {
         );
 
         if (existing.isPresent() && !existing.get().getId().equals(client.getId())) {
-            throw new DuplicateDocumentException(
-                    "Ya existe otro cliente con documento "
-                    + client.getDocumentType() + " " + client.getDocument()
-            );
+            throw duplicateFor(client, existing.get());
         }
 
         return clientDAO.update(client);
@@ -90,5 +84,17 @@ public class ClientController {
                     "Solo un administrador puede gestionar clientes"
             );
         }
+    }
+
+    private DuplicateDocumentException duplicateFor(Client client, Client existing) {
+        String document = client.getDocumentType() + " " + client.getDocument();
+
+        if (Boolean.FALSE.equals(existing.getActive())) {
+            return new DuplicateDocumentException(
+                    "Ya existe un cliente desactivado con documento " + document
+                    + " (la reactivación aún no está disponible en la aplicación)");
+        }
+        return new DuplicateDocumentException(
+                "Ya existe un cliente con documento " + document);
     }
 }
