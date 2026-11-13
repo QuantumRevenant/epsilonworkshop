@@ -37,7 +37,7 @@ public class ClientPanel extends javax.swing.JPanel {
         initComponents();
 
         documentTypeCombo.setModel(
-                new DefaultComboBoxModel<>(DocumentType.values())
+                new DefaultComboBoxModel(DocumentType.values())
         );
 
         deactivateButton.setEnabled(false);
