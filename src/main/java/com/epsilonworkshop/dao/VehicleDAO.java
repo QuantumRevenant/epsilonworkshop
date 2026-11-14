@@ -13,12 +13,13 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.sql.Types;
 
 /**
  *
  * @author sebap
  */
-public class VehicleDAO extends BaseDAO{
+public class VehicleDAO extends BaseDAO {
 
     public VehicleDAO() {
         super();
@@ -90,7 +91,11 @@ public class VehicleDAO extends BaseDAO{
             statement.setString(2, vehicle.getPlate());
             statement.setString(3, vehicle.getBrand());
             statement.setString(4, vehicle.getModel());
-            statement.setInt(5, vehicle.getYear());
+            if (vehicle.getYear() != null) {
+                statement.setInt(5, vehicle.getYear());
+            } else {
+                statement.setNull(5, Types.INTEGER);
+            }
             statement.setString(6, vehicle.getNotes());
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -178,7 +183,11 @@ public class VehicleDAO extends BaseDAO{
             statement.setString(2, vehicle.getPlate());
             statement.setString(3, vehicle.getBrand());
             statement.setString(4, vehicle.getModel());
-            statement.setInt(5, vehicle.getYear());
+            if (vehicle.getYear() != null) {
+                statement.setInt(5, vehicle.getYear());
+            } else {
+                statement.setNull(5, Types.INTEGER);
+            }
             statement.setString(6, vehicle.getNotes());
             statement.setLong(7, vehicle.getId());
 
@@ -206,7 +215,7 @@ public class VehicleDAO extends BaseDAO{
             int rowsAffected = statement.executeUpdate();
 
             if (rowsAffected == 0) {
-                throw new SQLException("Client not found: " + id);
+                throw new SQLException("Vehicle not found: " + id);
             }
 
         } finally {
@@ -223,10 +232,11 @@ public class VehicleDAO extends BaseDAO{
         vehicle.setPlate(resultSet.getString("plate"));
         vehicle.setBrand(resultSet.getString("brand"));
         vehicle.setModel(resultSet.getString("model"));
-        vehicle.setYear(resultSet.getInt("year"));
+        int year = resultSet.getInt("year");
+        vehicle.setYear(resultSet.wasNull() ? null : year);
         vehicle.setNotes(resultSet.getString("notes"));
         vehicle.setActive(resultSet.getBoolean("active"));
-           
+
         Timestamp createdAt = resultSet.getTimestamp("created_at");
         if (createdAt != null) {
             vehicle.setCreatedAt(createdAt.toLocalDateTime());
@@ -236,7 +246,7 @@ public class VehicleDAO extends BaseDAO{
         if (updatedAt != null) {
             vehicle.setUpdatedAt(updatedAt.toLocalDateTime());
         }
-                
+
         return vehicle;
     }
 }

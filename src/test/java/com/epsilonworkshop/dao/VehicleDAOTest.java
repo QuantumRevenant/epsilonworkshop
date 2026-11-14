@@ -161,6 +161,36 @@ public class VehicleDAOTest {
         assertFalse(result.get().getActive());
     }
 
+    @Test
+    void shouldCreateVehicleWithoutYear() throws Exception {
+
+        Client client = createTestClient();
+
+        Vehicle vehicle = new Vehicle();
+        vehicle.setClientId(client.getId());
+        vehicle.setPlate(generateTestPlate());
+        vehicle.setBrand("Toyota");
+        vehicle.setModel("Yaris");
+        vehicle.setYear(null);
+        vehicle.setNotes("Created by test");
+
+        Vehicle created = vehicleDAO.create(vehicle);
+
+        assertNull(created.getYear());
+        assertNull(vehicleDAO.findById(created.getId()).orElseThrow().getYear());
+    }
+
+    @Test
+    void shouldUpdateVehicleToRemoveYear() throws Exception {
+
+        Vehicle vehicle = createTestVehicle();
+        vehicle.setYear(null);
+
+        Vehicle updated = vehicleDAO.update(vehicle);
+
+        assertNull(updated.getYear());
+    }
+
     private Client createTestClient() throws Exception {
 
         Client client = new Client();
