@@ -39,11 +39,11 @@ public class UserController {
     ) throws UnauthorizedActionException, DuplicateUsernameException, SQLException {
 
         requireAdmin(actingUser);
-        
+
         if (!Validations.isValidPassword(plainPassword)) {
             throw new IllegalArgumentException("La contraseña debe tener entre 8 y 72 caracteres");
         }
-        
+
         if (userDAO.existsByUsername(username)) {
             throw new DuplicateUsernameException(
                     "Ya existe un usuario con username=" + username
@@ -77,8 +77,18 @@ public class UserController {
                         "No existe un usuario con id=" + userId
                 ));
 
-        user.setActive(active);
-        userDAO.update(user);
+        if (Boolean.TRUE.equals(user.getActive()) == active) {
+            return;
+        }
+
+        if (!active) {
+            userDAO.softDelete(userId);
+            return;
+        }
+
+        throw new UnsupportedOperationException(
+                "La reactivación de cuentas todavía no está implementada"
+        );
     }
 
     public Optional<User> findById(Long id, User actingUser)
