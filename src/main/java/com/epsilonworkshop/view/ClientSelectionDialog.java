@@ -22,6 +22,13 @@ import javax.swing.table.TableRowSorter;
 import java.text.Normalizer;
 import java.util.Locale;
 
+import com.epsilonworkshop.model.DocumentType;
+import com.epsilonworkshop.util.Validations;
+import com.epsilonworkshop.util.tree.BinarySearchTree;
+import com.epsilonworkshop.util.tree.BinaryTreeADT;
+import java.util.Comparator;
+import java.util.Optional;
+
 /**
  *
  * @author sebap
@@ -39,6 +46,8 @@ public class ClientSelectionDialog extends javax.swing.JDialog {
     private DefaultTableModel tableModel;
 
     private TableRowSorter<DefaultTableModel> sorter;
+
+    private BinaryTreeADT<Client> documentIndex;
 
     /**
      * Creates new form ClientSelectionDialog
@@ -105,6 +114,8 @@ public class ClientSelectionDialog extends javax.swing.JDialog {
                 }
             }
         });
+
+        searchField.addActionListener(e -> selectByExactDocument());
     }
 
     private void configureTable() {
@@ -143,6 +154,7 @@ public class ClientSelectionDialog extends javax.swing.JDialog {
     private void loadClients() {
         try {
             clients = controller.findAll();
+            buildDocumentIndex();
             refreshTable();
 
             if (clients.isEmpty()) {
@@ -153,6 +165,7 @@ public class ClientSelectionDialog extends javax.swing.JDialog {
 
         } catch (SQLException e) {
             clients = new ArrayList<>();
+            buildDocumentIndex();
             refreshTable();
 
             messageLabel.setText("Error al cargar clientes.");
@@ -252,6 +265,50 @@ public class ClientSelectionDialog extends javax.swing.JDialog {
 
     public Client getSelectedClient() {
         return selectedClient;
+    }
+
+    // Índice por tipo y documento: el mismo número puede existir bajo tipos distintos (RN-12).
+    private void buildDocumentIndex() {
+        documentIndex = new BinarySearchTree<Client>(
+                Comparator.comparing(Client::getDocumentType).thenComparing(Client::getDocument));
+
+        for (Client client : clients) {
+            documentIndex.insert(client);
+        }
+    }
+
+// Las longitudes son distintas por tipo, así que el número identifica el tipo.
+    private static DocumentType detectDocumentType(String text) {
+        for (DocumentType type : DocumentType.values()) {
+            if (Validations.isValidDocument(type, text)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+// Atajo: con un documento completo, Enter elige al cliente sin pasar por la tabla.
+    private void selectByExactDocument() {
+        String text = searchField.getText().trim();
+        DocumentType type = detectDocumentType(text);
+
+        if (type == null) {
+            return; // no es un documento completo: el filtro por texto ya hace su trabajo
+        }
+
+        Client probe = new Client();
+        probe.setDocumentType(type);
+        probe.setDocument(text);
+
+        Optional<Client> found = documentIndex.find(probe);
+
+        if (found.isEmpty()) {
+            messageLabel.setText("No existe un cliente con documento " + type + " " + text);
+            return;
+        }
+
+        selectedClient = found.get();
+        dispose();
     }
 
     /**
