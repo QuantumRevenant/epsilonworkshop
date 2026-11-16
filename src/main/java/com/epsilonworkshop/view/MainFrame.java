@@ -12,6 +12,7 @@ import com.epsilonworkshop.config.SessionManager;
 import com.epsilonworkshop.controller.AuthController;
 import com.epsilonworkshop.model.User;
 import com.epsilonworkshop.model.Role;
+import com.epsilonworkshop.view.avances.Avance3Panel;
 import java.awt.CardLayout;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -156,6 +157,7 @@ public class MainFrame extends javax.swing.JFrame {
         menuTools = new javax.swing.JMenu();
         itemAvance1 = new javax.swing.JMenuItem();
         itemAvance2 = new javax.swing.JMenuItem();
+        itemAvance3 = new javax.swing.JMenuItem();
         menuSession = new javax.swing.JMenu();
         itemLogout = new javax.swing.JMenuItem();
 
@@ -212,6 +214,10 @@ public class MainFrame extends javax.swing.JFrame {
         itemAvance2.addActionListener(this::itemAvance2ActionPerformed);
         menuTools.add(itemAvance2);
 
+        itemAvance3.setText("Avance 3: Pilas, colas y árboles");
+        itemAvance3.addActionListener(this::itemAvance3ActionPerformed);
+        menuTools.add(itemAvance3);
+
         menuBar.add(menuTools);
 
         menuSession.setText("Sesión");
@@ -237,6 +243,10 @@ public class MainFrame extends javax.swing.JFrame {
     private void itemAvance2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAvance2ActionPerformed
         openDialog("Avance 2: TADs", new Avance2Panel());
     }//GEN-LAST:event_itemAvance2ActionPerformed
+
+    private void itemAvance3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAvance3ActionPerformed
+        openDialog("Avance 3: Pilas, colas y árboles", new Avance3Panel());
+    }//GEN-LAST:event_itemAvance3ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -268,6 +278,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel contentPanel;
     private javax.swing.JMenuItem itemAvance1;
     private javax.swing.JMenuItem itemAvance2;
+    private javax.swing.JMenuItem itemAvance3;
     private javax.swing.JMenuItem itemClients;
     private javax.swing.JMenuItem itemLogout;
     private javax.swing.JMenuItem itemMechanics;
