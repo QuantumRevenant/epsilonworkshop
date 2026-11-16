@@ -78,6 +78,12 @@ public class UserPanel extends javax.swing.JPanel {
         messageLabel.setText("");
         saveButton.setEnabled(true);
         deactivateButton.setText("Desactivar");
+
+        passwordPanel.setVisible(true);
+        confirmPasswordPanel.setVisible(true);
+
+        formPanel.revalidate();
+        formPanel.repaint();
     }
 
     private void onRowSelected() {
@@ -139,6 +145,12 @@ public class UserPanel extends javax.swing.JPanel {
         } catch (SQLException | UnauthorizedActionException | IllegalArgumentException ex) {
             showMessage("Error al seleccionar usuario: " + ex.getMessage(), true);
         }
+
+        passwordPanel.setVisible(false);
+        confirmPasswordPanel.setVisible(false);
+
+        formPanel.revalidate();
+        formPanel.repaint();
     }
 
     private void reload() {
