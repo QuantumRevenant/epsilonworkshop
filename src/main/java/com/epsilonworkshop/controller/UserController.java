@@ -81,14 +81,11 @@ public class UserController {
             return;
         }
 
-        if (!active) {
+        if (active) {
+            userDAO.activate(userId);
+        } else {
             userDAO.softDelete(userId);
-            return;
         }
-
-        throw new UnsupportedOperationException(
-                "La reactivación de cuentas todavía no está implementada"
-        );
     }
 
     public Optional<User> findById(Long id, User actingUser)
@@ -103,6 +100,13 @@ public class UserController {
 
         requireAdmin(actingUser);
         return userDAO.findAll();
+    }
+
+    public List<User> findAllIncludingInactive(User actingUser)
+            throws UnauthorizedActionException, SQLException {
+
+        requireAdmin(actingUser);
+        return userDAO.findAllIncludingInactive();
     }
 
     private void requireAdmin(User actingUser) throws UnauthorizedActionException {

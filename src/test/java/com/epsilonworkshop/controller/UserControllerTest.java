@@ -91,12 +91,12 @@ public class UserControllerTest {
         targetUser.setActive(true);
 
         when(userDAO.findById(2L)).thenReturn(Optional.of(targetUser));
-        when(userDAO.update(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         controller.toggleActive(2L, false, actingAdmin);
 
-        verify(userDAO).update(argThat(u -> u.getId().equals(2L) && !u.getActive()));
+        verify(userDAO).softDelete(2L);
+        verify(userDAO, never()).activate(anyLong());
+        verify(userDAO, never()).update(any(User.class));
     }
 
     @Test
@@ -106,12 +106,12 @@ public class UserControllerTest {
         targetUser.setActive(false);
 
         when(userDAO.findById(2L)).thenReturn(Optional.of(targetUser));
-        when(userDAO.update(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         controller.toggleActive(2L, true, actingAdmin);
 
-        verify(userDAO).update(argThat(u -> u.getId().equals(2L) && u.getActive()));
+        verify(userDAO).activate(2L);
+        verify(userDAO, never()).softDelete(anyLong());
+        verify(userDAO, never()).update(any(User.class));
     }
 
     @Test
@@ -135,10 +135,12 @@ public class UserControllerTest {
         actingAdmin.setActive(false);
 
         when(userDAO.findById(1L)).thenReturn(Optional.of(actingAdmin));
-        when(userDAO.update(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertDoesNotThrow(() -> controller.toggleActive(1L, true, actingAdmin));
+        assertDoesNotThrow(
+                () -> controller.toggleActive(1L, true, actingAdmin)
+        );
+
+        verify(userDAO).activate(1L);
     }
 
     @Test
@@ -240,9 +242,35 @@ public class UserControllerTest {
                 )
         );
     }
-    
-    // ---------- helpers ----------
 
+    @Test
+    void shouldAllowAdminToFindAllUsersIncludingInactive() throws Exception {
+
+        User actingAdmin = createTestUser(1L, Role.ADMIN);
+
+        when(userDAO.findAllIncludingInactive()).thenReturn(List.of());
+
+        List<User> result = controller.findAllIncludingInactive(actingAdmin);
+
+        assertNotNull(result);
+        verify(userDAO).findAllIncludingInactive();
+    }
+
+    @Test
+    void shouldThrowUnauthorizedWhenMechanicTriesToFindAllUsersIncludingInactive()
+            throws Exception {
+
+        User mechanicUser = createTestUser(1L, Role.MECHANIC);
+
+        assertThrows(
+                UnauthorizedActionException.class,
+                () -> controller.findAllIncludingInactive(mechanicUser)
+        );
+
+        verify(userDAO, never()).findAllIncludingInactive();
+    }
+
+    // ---------- helpers ----------
     private User createTestUser(Long id, Role role) {
         User user = new User();
         user.setId(id);
