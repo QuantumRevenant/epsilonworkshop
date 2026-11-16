@@ -25,6 +25,7 @@ public class UserPanel extends javax.swing.JPanel {
     private final UserController userController = new UserController();
 
     private User selected;
+    private List<User> allUsers = List.of();
 
     /**
      * Creates new form ClientPanel
@@ -39,6 +40,11 @@ public class UserPanel extends javax.swing.JPanel {
             if (!e.getValueIsAdjusting()) {
                 onRowSelected();
             }
+        });
+
+        statusFilterComboBox.addActionListener(e -> {
+            clearForm();
+            applyStatusFilter();
         });
 
         clearForm();
@@ -71,6 +77,7 @@ public class UserPanel extends javax.swing.JPanel {
         table.clearSelection();
         messageLabel.setText("");
         saveButton.setEnabled(true);
+        deactivateButton.setText("Desactivar");
     }
 
     private void onRowSelected() {
@@ -123,6 +130,10 @@ public class UserPanel extends javax.swing.JPanel {
                     )
             );
 
+            deactivateButton.setText(
+                    Boolean.TRUE.equals(selected.getActive()) ? "Desactivar" : "Activar"
+            );
+
             messageLabel.setText("");
 
         } catch (SQLException | UnauthorizedActionException | IllegalArgumentException ex) {
@@ -132,15 +143,34 @@ public class UserPanel extends javax.swing.JPanel {
 
     private void reload() {
         try {
-            List<User> users = userController.findAll(
+            allUsers = userController.findAllIncludingInactive(
                     SessionManager.getCurrentUser()
             );
 
-            refreshTable(users);
+            applyStatusFilter();
 
         } catch (SQLException | UnauthorizedActionException ex) {
             showMessage("Error al cargar usuarios: " + ex.getMessage(), true);
         }
+    }
+
+    private void applyStatusFilter() {
+        String filter = (String) statusFilterComboBox.getSelectedItem();
+
+        List<User> filteredUsers = new java.util.ArrayList<>();
+
+        for (User user : allUsers) {
+            boolean active = Boolean.TRUE.equals(user.getActive());
+
+            if ("Todos".equals(filter)
+                    || ("Activos".equals(filter) && active)
+                    || ("Inactivos".equals(filter) && !active)) {
+
+                filteredUsers.add(user);
+            }
+        }
+
+        refreshTable(filteredUsers);
     }
 
     private void refreshTable(List<User> users) {
@@ -218,17 +248,24 @@ public class UserPanel extends javax.swing.JPanel {
 
     private void deactivate() {
         if (selected == null) {
-            showMessage("Selecciona una cuenta de la tabla", true);
+            showMessage("Selecciona un usuario de la tabla", true);
             return;
         }
 
+        boolean currentlyActive = Boolean.TRUE.equals(selected.getActive());
+        boolean newActive = !currentlyActive;
+
+        String action = newActive ? "activar" : "desactivar";
+
         int answer = JOptionPane.showConfirmDialog(
                 this,
-                "¿Deseas desactivar la cuenta de "
+                "¿Deseas " + action + " la cuenta "
                 + selected.getUsername() + "?",
-                "Confirmar desactivación",
+                "Confirmar acción",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
+                currentlyActive
+                        ? JOptionPane.WARNING_MESSAGE
+                        : JOptionPane.QUESTION_MESSAGE
         );
 
         if (answer != JOptionPane.YES_OPTION) {
@@ -238,7 +275,7 @@ public class UserPanel extends javax.swing.JPanel {
         try {
             userController.toggleActive(
                     selected.getId(),
-                    false,
+                    newActive,
                     SessionManager.getCurrentUser()
             );
 
@@ -246,7 +283,9 @@ public class UserPanel extends javax.swing.JPanel {
             reload();
 
             showMessage(
-                    "Cuenta desactivada. El usuario ya no podrá iniciar sesión.",
+                    newActive
+                            ? "Cuenta activada correctamente"
+                            : "Cuenta desactivada correctamente",
                     false
             );
 
@@ -256,7 +295,7 @@ public class UserPanel extends javax.swing.JPanel {
         } catch (SQLException e) {
             showMessage("Error de base de datos: " + e.getMessage(), true);
 
-        } catch (IllegalArgumentException | UnsupportedOperationException e) {
+        } catch (IllegalArgumentException e) {
             showMessage(e.getMessage(), true);
         }
     }
@@ -295,6 +334,7 @@ public class UserPanel extends javax.swing.JPanel {
         passwordPanel = new javax.swing.JPanel();
         passwordLabel = new javax.swing.JLabel();
         passwordPasswordField = new javax.swing.JPasswordField();
+        statusFilterComboBox = new javax.swing.JComboBox<>();
         confirmPasswordPanel = new javax.swing.JPanel();
         confirmPasswordLabel = new javax.swing.JLabel();
         confirmPasswordPasswordField = new javax.swing.JPasswordField();
@@ -374,6 +414,15 @@ public class UserPanel extends javax.swing.JPanel {
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         formPanel.add(passwordPanel, gridBagConstraints);
+
+        statusFilterComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "Activos", "Inactivos" }));
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        formPanel.add(statusFilterComboBox, gridBagConstraints);
 
         confirmPasswordPanel.setLayout(new java.awt.BorderLayout());
 
@@ -536,6 +585,7 @@ public class UserPanel extends javax.swing.JPanel {
     private javax.swing.JLabel roleLabelLabel;
     private javax.swing.JPanel rolePanel;
     private javax.swing.JButton saveButton;
+    private javax.swing.JComboBox<String> statusFilterComboBox;
     private javax.swing.JLabel statusLabel;
     private javax.swing.JLabel statusLabelLabel;
     private javax.swing.JPanel statusPanel;
