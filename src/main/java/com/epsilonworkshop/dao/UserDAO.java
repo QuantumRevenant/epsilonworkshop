@@ -88,6 +88,19 @@ public class UserDAO extends BaseDAO {
         WHERE username = ?
         """;
 
+    private static final String FIND_ALL_INCLUDING_INACTIVE_SQL = """
+        SELECT *
+        FROM users
+        ORDER BY id
+        """;
+
+    private static final String ACTIVATE_SQL = """
+        UPDATE users
+        SET active = TRUE,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """;
+
     public User create(User user) throws SQLException {
 
         Connection conn = getConnection();
@@ -174,6 +187,24 @@ public class UserDAO extends BaseDAO {
         return users;
     }
 
+    public List<User> findAllIncludingInactive() throws SQLException {
+
+        Connection conn = getConnection();
+        List<User> users = new ArrayList<>();
+
+        try (PreparedStatement statement = conn.prepareStatement(FIND_ALL_INCLUDING_INACTIVE_SQL); ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                users.add(mapResultSet(resultSet));
+            }
+
+        } finally {
+            closeConnection(conn);
+        }
+
+        return users;
+    }
+
     public User update(User user) throws SQLException {
 
         Connection conn = getConnection();
@@ -206,6 +237,25 @@ public class UserDAO extends BaseDAO {
         Connection conn = getConnection();
 
         try (PreparedStatement statement = conn.prepareStatement(SOFT_DELETE_SQL)) {
+
+            statement.setLong(1, id);
+
+            int rowsAffected = statement.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new SQLException("User not found: " + id);
+            }
+
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    public void activate(Long id) throws SQLException {
+
+        Connection conn = getConnection();
+
+        try (PreparedStatement statement = conn.prepareStatement(ACTIVATE_SQL)) {
 
             statement.setLong(1, id);
 

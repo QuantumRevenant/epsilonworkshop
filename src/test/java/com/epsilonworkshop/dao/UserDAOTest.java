@@ -194,6 +194,46 @@ public class UserDAOTest {
         assertFalse(exists);
     }
 
+    @Test
+    void shouldFindAllUsersIncludingInactive() throws Exception {
+
+        User activeUser = createTestUser();
+        User inactiveUser = createTestUser();
+
+        userDAO.softDelete(inactiveUser.getId());
+
+        List<User> users = userDAO.findAllIncludingInactive();
+
+        assertTrue(
+                users.stream().anyMatch(user
+                        -> user.getId().equals(activeUser.getId())
+                        && Boolean.TRUE.equals(user.getActive())
+                )
+        );
+
+        assertTrue(
+                users.stream().anyMatch(user
+                        -> user.getId().equals(inactiveUser.getId())
+                        && Boolean.FALSE.equals(user.getActive())
+                )
+        );
+    }
+
+    @Test
+    void shouldActivateInactiveUser() throws Exception {
+
+        User user = createTestUser();
+
+        userDAO.softDelete(user.getId());
+        userDAO.activate(user.getId());
+
+        Optional<User> result = userDAO.findById(user.getId());
+
+        assertTrue(result.isPresent());
+        assertTrue(result.get().getActive());
+        assertNotNull(result.get().getUpdatedAt());
+    }
+
     private User createTestUser() throws Exception {
 
         User user = new User();
