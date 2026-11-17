@@ -270,6 +270,20 @@ public class UserControllerTest {
         verify(userDAO, never()).findAllIncludingInactive();
     }
 
+    @Test
+    void shouldDoNothingWhenUserAlreadyHasRequestedState() throws Exception {
+        User actingAdmin = createTestUser(1L, Role.ADMIN);
+        User targetUser = createTestUser(2L, Role.MECHANIC);
+        targetUser.setActive(true);
+
+        when(userDAO.findById(2L)).thenReturn(Optional.of(targetUser));
+
+        controller.toggleActive(2L, true, actingAdmin);
+
+        verify(userDAO, never()).activate(anyLong());
+        verify(userDAO, never()).softDelete(anyLong());
+    }
+
     // ---------- helpers ----------
     private User createTestUser(Long id, Role role) {
         User user = new User();
