@@ -8,6 +8,7 @@ import com.epsilonworkshop.config.DBConnection;
 import com.epsilonworkshop.model.Role;
 import com.epsilonworkshop.model.User;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -232,6 +233,16 @@ public class UserDAOTest {
         assertTrue(result.isPresent());
         assertTrue(result.get().getActive());
         assertNotNull(result.get().getUpdatedAt());
+    }
+
+    @Test
+    void shouldThrowWhenActivatingNonexistentUser() {
+        assertThrows(SQLException.class, () -> userDAO.activate(-1L));
+    }
+
+    @Test
+    void shouldThrowWhenSoftDeletingNonexistentUser() {
+        assertThrows(SQLException.class, () -> userDAO.softDelete(-1L));
     }
 
     private User createTestUser() throws Exception {
