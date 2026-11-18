@@ -28,6 +28,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -72,7 +74,6 @@ public class WorkOrderControllerIntegrationTest {
     }
 
     // ---------- changeStatus ----------
-
     @Test
     void shouldChangeStatusFromPendingToInProgressAsAdmin() throws Exception {
         Mechanic mechanic = createTestMechanic(true);
@@ -167,7 +168,6 @@ public class WorkOrderControllerIntegrationTest {
     }
 
     // ---------- reassignMechanic ----------
-
     @Test
     void shouldReassignMechanicAsAdmin() throws Exception {
         Mechanic original = createTestMechanic(true);
@@ -255,8 +255,111 @@ public class WorkOrderControllerIntegrationTest {
         );
     }
 
-    // ---------- helpers ----------
+    @Test
+    void shouldSaveMechanicReassignmentInHistory() throws Exception {
+        User admin = createTestUser(Role.ADMIN);
+        Mechanic firstMechanic = createTestMechanic(true);
+        Mechanic secondMechanic = createTestMechanic(true);
 
+        WorkOrder order = createTestWorkOrder(firstMechanic.getId());
+
+        controller.reassignMechanic(
+                order.getId(),
+                secondMechanic.getId(),
+                admin,
+                null
+        );
+
+        String sql = """
+        SELECT change_type, old_value, new_value, user_id
+        FROM work_order_history
+        WHERE work_order_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, order.getId());
+
+            try (ResultSet result = statement.executeQuery()) {
+                assertTrue(result.next());
+
+                assertEquals("mechanic_reassignment", result.getString("change_type"));
+                assertEquals(
+                        firstMechanic.getId().toString(),
+                        result.getString("old_value")
+                );
+                assertEquals(
+                        secondMechanic.getId().toString(),
+                        result.getString("new_value")
+                );
+                assertEquals(admin.getId(), result.getLong("user_id"));
+            }
+        }
+    }
+
+    @Test
+    void shouldSetClosedAtWhenWorkOrderIsFinished() throws Exception {
+        User admin = createTestUser(Role.ADMIN);
+        WorkOrder order = createTestWorkOrder(null);
+
+        controller.changeStatus(
+                order.getId(),
+                OrderStatus.IN_PROGRESS,
+                admin,
+                null
+        );
+
+        controller.changeStatus(
+                order.getId(),
+                OrderStatus.FINISHED,
+                admin,
+                null
+        );
+
+        WorkOrder updatedOrder = workOrderDAO.findById(order.getId())
+                .orElseThrow();
+
+        assertEquals(OrderStatus.FINISHED, updatedOrder.getStatus());
+        assertNotNull(updatedOrder.getClosedAt());
+    }
+
+    @Test
+    void shouldNotChangeStatusOfFinishedWorkOrder() throws Exception {
+        User admin = createTestUser(Role.ADMIN);
+        WorkOrder order = createTestWorkOrder(null);
+
+        controller.changeStatus(
+                order.getId(),
+                OrderStatus.IN_PROGRESS,
+                admin,
+                null
+        );
+
+        controller.changeStatus(
+                order.getId(),
+                OrderStatus.FINISHED,
+                admin,
+                null
+        );
+
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> controller.changeStatus(
+                        order.getId(),
+                        OrderStatus.IN_PROGRESS,
+                        admin,
+                        null
+                )
+        );
+
+        WorkOrder unchangedOrder = workOrderDAO.findById(order.getId())
+                .orElseThrow();
+
+        assertEquals(OrderStatus.FINISHED, unchangedOrder.getStatus());
+    }
+
+    // ---------- helpers ----------
     private WorkOrder createTestWorkOrder(Long mechanicId) throws Exception {
         Vehicle vehicle = createTestVehicle();
 

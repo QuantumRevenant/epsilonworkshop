@@ -170,20 +170,93 @@ public class WorkOrderControllerTest {
     }
 
     @Test
-    void shouldReturnHistoryForWorkOrder() throws Exception {
+    void shouldReturnHistoryForWorkOrderAsAdmin() throws Exception {
+        User admin = createTestUser(Role.ADMIN);
+
+        WorkOrder order = new WorkOrder();
+        order.setId(1L);
+        order.setMechanicId(7L);
+
         WorkOrderHistory firstChange = new WorkOrderHistory();
         firstChange.setWorkOrderId(1L);
         firstChange.setChangeType(WorkOrderChangeType.STATUS_CHANGE);
         firstChange.setOldValue("pending");
         firstChange.setNewValue("in_progress");
 
+        when(workOrderDAO.findById(1L))
+                .thenReturn(Optional.of(order));
+
         when(workHistoryDAO.findByWorkOrderId(1L))
                 .thenReturn(List.of(firstChange));
 
-        List<WorkOrderHistory> history = controller.getHistory(1L);
+        List<WorkOrderHistory> history
+                = controller.getHistory(1L, admin, null);
 
         assertEquals(1, history.size());
         assertEquals("in_progress", history.get(0).getNewValue());
+
+        verify(workOrderDAO).findById(1L);
+        verify(workHistoryDAO).findByWorkOrderId(1L);
+    }
+
+    @Test
+    void shouldReturnAllWorkOrdersForAdmin() throws Exception {
+        User admin = createTestUser(Role.ADMIN);
+
+        WorkOrder assignedOrder = new WorkOrder();
+        assignedOrder.setMechanicId(5L);
+
+        WorkOrder unassignedOrder = new WorkOrder();
+        unassignedOrder.setMechanicId(null);
+
+        List<WorkOrder> allOrders = List.of(
+                assignedOrder,
+                unassignedOrder
+        );
+
+        when(workOrderDAO.findAll()).thenReturn(allOrders);
+
+        List<WorkOrder> visibleOrders
+                = controller.findVisibleWorkOrders(admin, null);
+
+        assertEquals(2, visibleOrders.size());
+        assertEquals(allOrders, visibleOrders);
+    }
+
+    @Test
+    void shouldReturnOwnAndUnassignedOrdersForMechanic() throws Exception {
+        User mechanicUser = createTestUser(Role.MECHANIC);
+
+        WorkOrder ownOrder = new WorkOrder();
+        ownOrder.setMechanicId(7L);
+
+        WorkOrder unassignedOrder = new WorkOrder();
+        unassignedOrder.setMechanicId(null);
+
+        WorkOrder otherOrder = new WorkOrder();
+        otherOrder.setMechanicId(99L);
+
+        when(workOrderDAO.findAll()).thenReturn(
+                List.of(ownOrder, unassignedOrder, otherOrder)
+        );
+
+        List<WorkOrder> visibleOrders
+                = controller.findVisibleWorkOrders(mechanicUser, 7L);
+
+        assertEquals(2, visibleOrders.size());
+        assertTrue(visibleOrders.contains(ownOrder));
+        assertTrue(visibleOrders.contains(unassignedOrder));
+        assertFalse(visibleOrders.contains(otherOrder));
+    }
+
+    @Test
+    void shouldRejectMechanicQueryWithoutMechanicId() {
+        User mechanicUser = createTestUser(Role.MECHANIC);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.findVisibleWorkOrders(mechanicUser, null)
+        );
     }
 
     private User createTestUser(Role role) {
