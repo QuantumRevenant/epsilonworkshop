@@ -8,6 +8,7 @@ import com.epsilonworkshop.dao.ClientDAO;
 import com.epsilonworkshop.exception.DuplicateDocumentException;
 import com.epsilonworkshop.exception.UnauthorizedActionException;
 import com.epsilonworkshop.model.Client;
+import com.epsilonworkshop.model.DocumentType;
 import com.epsilonworkshop.model.Role;
 import com.epsilonworkshop.model.User;
 
@@ -74,12 +75,21 @@ public class ClientController {
         return clientDAO.findById(id);
     }
 
+    public Optional<Client> findByDocument(
+            DocumentType documentType,
+            String document
+    ) throws SQLException {
+        return clientDAO.findByDocument(documentType, document);
+    }
+
     public List<Client> findAll() throws SQLException {
         return clientDAO.findAll();
     }
 
-    private void requireAdmin(User actingUser) throws UnauthorizedActionException {
-        if (actingUser.getRole() != Role.ADMIN) {
+    private void requireAdmin(User actingUser)
+            throws UnauthorizedActionException {
+
+        if (actingUser == null || actingUser.getRole() != Role.ADMIN) {
             throw new UnauthorizedActionException(
                     "Solo un administrador puede gestionar clientes"
             );
