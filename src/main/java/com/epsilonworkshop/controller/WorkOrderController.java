@@ -22,6 +22,7 @@ import com.epsilonworkshop.model.WorkOrderHistory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -323,7 +324,99 @@ public class WorkOrderController {
         }
     }
 
-    public List<WorkOrderHistory> getHistory(Long orderId) throws SQLException {
-        return workHistoryDAO.findByWorkOrderId(orderId);
+    public List<WorkOrder> findVisibleWorkOrders(
+            User actingUser,
+            Long actingMechanicId
+    ) throws SQLException {
+
+        if (actingUser == null || actingUser.getRole() == null) {
+            throw new IllegalArgumentException(
+                    "El usuario que realiza la consulta no es válido"
+            );
+        }
+
+        List<WorkOrder> allOrders = workOrderDAO.findAll();
+
+        // El administrador puede visualizar todas las órdenes.
+        if (actingUser.getRole() == Role.ADMIN) {
+            return allOrders;
+        }
+
+        // Un mecánico debe tener su ID de mecánico de sesión.
+        if (actingMechanicId == null) {
+            throw new IllegalArgumentException(
+                    "No se encontró el mecánico asociado al usuario actual"
+            );
+        }
+
+        List<WorkOrder> visibleOrders = new ArrayList<>();
+
+        for (WorkOrder order : allOrders) {
+            Long assignedMechanicId = order.getMechanicId();
+
+            // El mecánico puede ver sus órdenes y las que están sin asignar.
+            if (assignedMechanicId == null
+                    || assignedMechanicId.equals(actingMechanicId)) {
+
+                visibleOrders.add(order);
+            }
+        }
+
+        return visibleOrders;
     }
+
+    public List<WorkOrderHistory> getHistory(
+            Long orderId,
+            User actingUser,
+            Long actingMechanicId
+    ) throws UnauthorizedActionException, SQLException {
+
+        if (orderId == null) {
+            throw new IllegalArgumentException(
+                    "El ID de la orden no puede ser nulo"
+            );
+        }
+
+        if (actingUser == null || actingUser.getRole() == null) {
+            throw new IllegalArgumentException(
+                    "El usuario que realiza la consulta no es válido"
+            );
+        }
+
+        WorkOrder order = workOrderDAO.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe una orden de trabajo con id=" + orderId
+                ));
+
+        if (actingUser.getRole() == Role.ADMIN) {
+            return workHistoryDAO.findByWorkOrderId(orderId);
+        }
+
+        if (actingUser.getRole() == Role.MECHANIC) {
+
+            if (actingMechanicId == null) {
+                throw new UnauthorizedActionException(
+                        "No tienes un mecánico asociado a tu usuario"
+                );
+            }
+
+            Long assignedMechanicId = order.getMechanicId();
+
+            if (assignedMechanicId != null
+                    && !assignedMechanicId.equals(actingMechanicId)) {
+
+                throw new UnauthorizedActionException(
+                        "No puedes consultar el historial de una orden "
+                        + "asignada a otro mecánico"
+                );
+            }
+
+            return workHistoryDAO.findByWorkOrderId(orderId);
+        }
+
+        throw new UnauthorizedActionException(
+                "No tienes permisos para consultar el historial"
+        );
+    }
+
 }
