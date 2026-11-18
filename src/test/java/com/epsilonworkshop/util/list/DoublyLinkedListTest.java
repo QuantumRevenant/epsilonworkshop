@@ -121,9 +121,9 @@ public class DoublyLinkedListTest {
 
         List<NodeInfo> nodes = list.describeNodes();
 
-        assertEquals("-", nodes.get(0).previousRef()); // el primero no tiene anterior
-        assertEquals("-", nodes.get(2).nextRef());     // el último no tiene siguiente
-        assertEquals("Nodo[0]", nodes.get(1).previousRef()); // el del medio sí ve ambos lados
+        assertEquals("—", nodes.get(0).previousRef());
+        assertEquals("—", nodes.get(2).nextRef());
+        assertEquals("Nodo[0]", nodes.get(1).previousRef());
         assertEquals("Nodo[2]", nodes.get(1).nextRef());
     }
 }
