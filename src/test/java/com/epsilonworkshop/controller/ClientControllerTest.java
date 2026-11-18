@@ -11,6 +11,7 @@ import com.epsilonworkshop.model.Client;
 import com.epsilonworkshop.model.DocumentType;
 import com.epsilonworkshop.model.Role;
 import com.epsilonworkshop.model.User;
+import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -193,6 +194,42 @@ public class ClientControllerTest {
         );
 
         assertTrue(ex.getMessage().contains("desactivado"));
+    }
+
+    @Test
+    void shouldFindClientByDocument() throws SQLException {
+        DocumentType documentType = DocumentType.DNI;
+        String document = "12345678";
+        Client expectedClient = new Client();
+
+        when(clientDAO.findByDocument(documentType, document))
+                .thenReturn(Optional.of(expectedClient));
+
+        Optional<Client> result = controller.findByDocument(
+                documentType, document
+        );
+
+        assertTrue(result.isPresent());
+        assertSame(expectedClient, result.get());
+
+        verify(clientDAO).findByDocument(documentType, document);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenDocumentIsNotFound() throws SQLException {
+        DocumentType documentType = DocumentType.DNI;
+        String document = "12345678";
+
+        when(clientDAO.findByDocument(documentType, document))
+                .thenReturn(Optional.empty());
+
+        Optional<Client> result = controller.findByDocument(
+                documentType, document
+        );
+
+        assertTrue(result.isEmpty());
+
+        verify(clientDAO).findByDocument(documentType, document);
     }
 
     // ---------- helpers ----------
